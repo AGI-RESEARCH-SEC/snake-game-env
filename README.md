@@ -7,3 +7,10 @@
 
 
 ![image](images/snake-maze.png)
+
+
+
+### Note:
+    * White is the snake
+    * Green is the food
+    * Blue is the maze wall
