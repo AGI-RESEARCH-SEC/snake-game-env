@@ -244,9 +244,13 @@ class MazeSnakeGameEnv(gym.Env):
         observation[self.food] = 0.5
         return observation
     
-    def valid_actions(self, actions, previous_action):
+    def valid_actions(self, actions, previous_action, return_co_ords=False):
         valid_actions = []
         for action in range(actions.n):
-            if not self.is_collision(self.get_new_head(action,  previous_action)):
-                valid_actions.append(action)
+            new_head = self.get_new_head(action,  previous_action)
+            if not self.is_collision(new_head):
+                if return_co_ords:
+                    valid_actions.append(new_head)
+                else:
+                    valid_actions.append(action)
         return valid_actions

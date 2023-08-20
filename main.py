@@ -13,4 +13,5 @@ agents = Agents(HEIGHT, WIDTH, SNAKE_SPEED, SNAKE_GROWTH, BOUNDARY_LOOP)
 
 
 # agents.random_walk()      # Random agent
-agents.mannual_control()    # controlled by human
+# agents.mannual_control()    # controlled by human
+agents.flood_fill()    # flood fill algorithm
