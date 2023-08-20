@@ -11,9 +11,10 @@ class FloodFillAgent:
         while stack:
             
             current, path = stack.pop()
+            self.env.snake = [current]    # update current position in env
 
             if current == goal:
-                return path
+                return path + [current]
 
             if current in visited:
                 continue
@@ -24,8 +25,9 @@ class FloodFillAgent:
             neighbors = self.env.valid_actions(actions=self.env.action_space, previous_action=None, return_co_ords=True)
             for neighbor in neighbors:
                 stack.append((neighbor, path + [current]))
-                print(f'neighbours:{neighbors} stack:{stack} current:{current} path: {path} neighbor: {neighbor}')
-
+                # print(f'neighbours:{neighbors} stack:{stack} current:{current} path: {path} neighbor: {neighbor}')
+            
+            print(f'----------------------------------------- \n start:{start} \t goal:{goal} \t current: {current} \n neighbours: {neighbors} \n stack: {stack} \n current: {current} \n path: {path} \n neighbor: {neighbor} \n -----------------------------------------')
         return None
 
     def get_next_move(self, maze, current_pos, goal):

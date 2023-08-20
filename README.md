@@ -14,3 +14,10 @@
     * White is the snake
     * Green is the food
     * Blue is the maze wall
+
+### WillDo:
+* Optimize Flood Fill algorithm
+
+### References:
+* [edureka-snake-game-with-pygame]( https://www.edureka.co/blog/snake-game-with-pygame/)
+* chat-gpt

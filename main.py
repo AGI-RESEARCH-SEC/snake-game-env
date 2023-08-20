@@ -5,7 +5,7 @@ from snake_maze_env import MazeSnakeGameEnv
 # CONSTANTS:
 HEIGHT = 25
 WIDTH = 25
-SNAKE_SPEED =1
+SNAKE_SPEED = 10
 SNAKE_GROWTH = False
 BOUNDARY_LOOP = False
 
