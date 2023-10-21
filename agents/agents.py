@@ -9,7 +9,7 @@ import random
 from maze import Maze
 from snake_maze_env import MazeSnakeGameEnv
 
-from flood_fill import FloodFillAgent
+from .flood_fill import FloodFillAgent
 
 class Agents:
     def __init__(self, height=25, width=25, snake_speed=1, snake_growth=False, boundary_loop = False) -> None:

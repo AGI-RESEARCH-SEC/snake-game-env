@@ -226,9 +226,10 @@ class MazeSnakeGameEnv(gym.Env):
 
     def is_collision(self, position):
         # print(f'\n ------ collision posiition: {position}, type:{type(position)}')
+        print(f'\n position:{position}, type:{type(position)} snake:{self.snake}, food:{self.food}')
         return (position[0] >= self.width or position[1] >= self.height) or \
                (position in self.snake) or \
-               (self.maze[position[1]][position[0]] == 1 or self.maze[position[1]][position[0]] == '1')
+               (self.maze[position[1]%self.width][position[0]%self.height] == 1 or self.maze[position[1]%self.width][position[0]%self.height] == '1')
 
     def get_observation(self):
         # observation = np.zeros((self.grid_size, self.grid_size))

@@ -1,4 +1,4 @@
-from agents import Agents
+from agents.agents import Agents
 from maze import Maze
 from snake_maze_env import MazeSnakeGameEnv
 
