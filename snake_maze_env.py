@@ -71,7 +71,7 @@ class MazeSnakeGameEnv(gym.Env):
         self.score = 0
         return self.get_observation()
 
-    def step(self, action, previous_action):
+    def step(self, action, previous_action=None):
         # print('----------step-------------')
         new_head = self.get_new_head(action, previous_action)
         assert type(new_head) == tuple, '\n new_head:{' + str(new_head) + '}, type:{' + str(type(new_head)) + '}, action:{' + str(action) +'}, previous_action:{' + str(previous_action) + '}'
@@ -97,6 +97,22 @@ class MazeSnakeGameEnv(gym.Env):
             done = False
         
         return self.get_observation(), reward, done, {}
+    
+    def move_snake(start_position, action, maze, food_position):
+        # duplicate function of step for q_learning agent.
+        # Didn't want to break the code, so just made another function for q learning agent.
+        # returns new_position, reward
+        
+        # Check if the snake has reached the food
+        if position == food_position:
+            return food_position, 100  # A large positive reward for reaching the food
+
+        # Check if the snake has hit a wall or itself
+        if self.is_collision(position):
+            return start_position, -100  # A large negative reward for collision
+
+        # Slight negative reward for each move to encourage shortest path
+        return self.get_new_head(action, current_snake_position = start_position), -5
 
     def render(self, message = None):
         self.screen.fill((0, 0, 0))
@@ -182,31 +198,36 @@ class MazeSnakeGameEnv(gym.Env):
         return new_food
                     
             
-    def get_new_head(self, action,  previous_action):
+    def get_new_head(self, action,  previous_action = None, current_snake_position = None):
         def move(x, y, action):
             if self.boundary_loop:
-                if action == 0:  # Up
+                if action == 0 or action == 'up':  # Up
                     # return head_x, (head_y - 1) % self.grid_size
                     return head_x, (head_y - 1) % self.height
-                elif action == 2:  # Down
+                elif action == 2 or action == 'down':  # Down
                     # return head_x, (head_y + 1) % self.grid_size
                     return head_x, (head_y + 1) % self.width
-                elif action == 1:  # Left
+                elif action == 1 or action == 'left':  # Left
                     # return (head_x - 1) % self.grid_size, head_y
                     return (head_x - 1) % self.width, head_y
-                elif action == 3:  # Right
+                elif action == 3 or action == 'right':  # Right
                     # return (head_x + 1) % self.grid_size, head_y
                     return (head_x + 1) % self.width, head_y
             else:
-                if action == 0:  # Up
+                if action == 0 or action == 'up':  # Up
                     return head_x, (head_y - 1)
-                elif action == 2:  # Down
+                elif action == 2 or action == 'down':  # Down
                     return head_x, (head_y + 1)
-                elif action == 1:  # Left
+                elif action == 1 or action == 'left':  # Left
                     return (head_x - 1), head_y
-                elif action == 3:  # Right
+                elif action == 3 or action == 'right':  # Right
                     return (head_x + 1), head_y
-                
+        
+        if current_snake_position:
+            # Fore q_learning_agent
+            head_x, head_y = current_snake_position
+            return move(head_x, head_y, action)
+        
         head_x, head_y = self.snake[0]
         if len(self.snake) == 1:
             return move(head_x, head_y, action)
@@ -226,10 +247,10 @@ class MazeSnakeGameEnv(gym.Env):
 
     def is_collision(self, position):
         # print(f'\n ------ collision posiition: {position}, type:{type(position)}')
-        print(f'\n position:{position}, type:{type(position)} snake:{self.snake}, food:{self.food}')
         return (position[0] >= self.width or position[1] >= self.height) or \
+               (position[0] < 0 or position[1] < 0) or \
                (position in self.snake) or \
-               (self.maze[position[1]%self.width][position[0]%self.height] == 1 or self.maze[position[1]%self.width][position[0]%self.height] == '1')
+               (self.maze[position[1]][position[0]] == 1 or self.maze[position[1]][position[0]] == '1')
 
     def get_observation(self):
         # observation = np.zeros((self.grid_size, self.grid_size))
