@@ -26,7 +26,7 @@ class MazeSnakeGameEnv(gym.Env):
     note: if snake goes through boundary, it appears on the opposite side <defined in 'get_new_head()'>
     '''
 
-    def __init__(self, maze, width, height, snake_growth = False, boundary_loop = False):
+    def __init__(self, maze, width, height, snake_growth = False, boundary_loop = False, display = True):
         super(MazeSnakeGameEnv, self).__init__()
         self.action_space = spaces.Discrete(4)  # Up, Left, Down, Right actions
         self.observation_space = spaces.Box(low=0, high=1, shape=(10, 10), dtype=np.float32)
@@ -57,11 +57,12 @@ class MazeSnakeGameEnv(gym.Env):
         self.blue = (50, 153, 213)
         self.yellow = (255, 255, 0)
 
-        pygame.init()
-        # Each cell is represented by a square with a size of 20x20 pixels.
-        # self.screen = pygame.display.set_mode((self.grid_size * 20, self.grid_size * 20))
-        self.screen = pygame.display.set_mode((self.width * 20, self.height * 20))
-        pygame.display.set_caption('Maze Snake Game')
+        if display:
+            pygame.init()
+            # Each cell is represented by a square with a size of 20x20 pixels.
+            # self.screen = pygame.display.set_mode((self.grid_size * 20, self.grid_size * 20))
+            self.screen = pygame.display.set_mode((self.width * 20, self.height * 20))
+            pygame.display.set_caption('Maze Snake Game')
 
     def reset(self):
         # self.grid = np.zeros((self.grid_size, self.grid_size))
@@ -227,8 +228,8 @@ class MazeSnakeGameEnv(gym.Env):
             # Fore q_learning_agent
             head_x, head_y = current_snake_position
             return move(head_x, head_y, action)
-        
-        head_x, head_y = self.snake[0]
+        else:
+            head_x, head_y = self.snake[0]
         if len(self.snake) == 1:
             return move(head_x, head_y, action)
         else:
@@ -250,7 +251,7 @@ class MazeSnakeGameEnv(gym.Env):
         return (position[0] >= self.width or position[1] >= self.height) or \
                (position[0] < 0 or position[1] < 0) or \
                (position in self.snake) or \
-               (self.maze[position[1]][position[0]] == 1 or self.maze[position[1]][position[0]] == '1')
+               (self.maze[position[0]][position[1]] == 1 or self.maze[position[0]][position[1]] == '1')
 
     def get_observation(self):
         # observation = np.zeros((self.grid_size, self.grid_size))
@@ -261,18 +262,65 @@ class MazeSnakeGameEnv(gym.Env):
         # for x in range(self.grid_size):
         for y in range(self.height):
             for x in range(self.width):
-                if self.maze[y][x] == 1:
-                    observation[y][x] = 0.7
+                if self.maze[x][y] == 1:
+                    observation[x][y] = 0.7
         observation[self.food] = 0.5
         return observation
     
-    def valid_actions(self, actions, previous_action, return_co_ords=False):
+    def valid_actions(self, actions, previous_action, return_co_ords=False, testing=False, from_position = None):
         valid_actions = []
+        moves = []
         for action in range(actions.n):
-            new_head = self.get_new_head(action,  previous_action)
+            new_head = self.get_new_head(action,  previous_action, current_snake_position = from_position)
             if not self.is_collision(new_head):
                 if return_co_ords:
                     valid_actions.append(new_head)
+                    moves.append(action)
                 else:
                     valid_actions.append(action)
+        if testing:
+            return valid_actions, moves
+        elif return_co_ords:
+            return valid_actions
         return valid_actions
+
+'''
+# Testing valid actions
+from snake_maze_env import MazeSnakeGameEnv
+maze = [
+            ['0', '0', '0', '1', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', '1', '0', '0', '0'],
+            ['1', '1', '0', '0', '0', '0', '1', '1', '0', '0', '1', '0', '1', '1', '0', '1', '1', '0', '1', '1', '0', '0', '0', '1', '0'],
+            ['0', '1', '1', '0', '1', '0', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '1', '1', '0'],
+            ['0', '0', '0', '1', '1', '1', '0', '1', '1', '1', '0', '0', '1', '0', '1', '0', '0', '1', '1', '0', '0', '0', '1', '0', '1'],
+            ['0', '1', '1', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '0', '1', '0', '1', '0', '1', '0', '0', '0', '0'],
+            ['0', '1', '0', '0', '0', '1', '0', '1', '0', '1', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '1', '0'],
+            ['0', '0', '1', '1', '0', '0', '0', '0', '1', '0', '0', '1', '0', '1', '0', '0', '1', '1', '1', '1', '0', '0', '0', '0', '0'],
+            ['0', '1', '0', '0', '1', '0', '1', '0', '1', '1', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '1', '0', '1', '1', '0'],
+            ['0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '1', '0', '0', '0'],
+            ['1', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '1', '1', '0', '0', '0', '1', '0'],
+            ['0', '0', '0', '0', '1', '0', '0', '1', '0', '1', '0', '1', '0', '0', '1', '0', '0', '1', '0', '0', '1', '1', '0', '0', '0'],
+            ['0', '1', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '1', '0', '1', '0', '0', '0', '0', '1', '0'],
+            ['1', '0', '0', '1', '0', '1', '0', '1', '0', '1', '1', '0', '0', '1', '1', '0', '0', '0', '0', '1', '0', '1', '0', '0', '0'],
+            ['1', '0', '1', '0', '0', '0', '1', '0', '1', '0', '0', '0', '1', '0', '0', '1', '0', '1', '1', '0', '1', '0', '0', '1', '0'],
+            ['0', '1', '0', '1', '1', '0', '0', '0', '0', '1', '1', '0', '1', '0', '1', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0'],
+            ['0', '0', '0', '1', '0', '0', '1', '1', '0', '1', '0', '0', '0', '0', '1', '0', '1', '1', '0', '0', '1', '0', '0', '1', '0'],
+            ['1', '0', '1', '0', '1', '0', '0', '0', '1', '0', '0', '1', '1', '1', '0', '0', '0', '1', '1', '0', '0', '1', '0', '0', '0'],
+            ['0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0', '1', '1', '0', '1', '0', '1', '1', '0', '1', '1', '0', '0'],
+            ['0', '1', '0', '1', '0', '1', '1', '1', '0', '0', '1', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'],
+            ['1', '0', '1', '0', '0', '1', '1', '0', '1', '0', '1', '0', '0', '1', '0', '1', '0', '1', '1', '0', '1', '1', '0', '1', '0'],
+            ['0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '1', '0', '0', '1', '0', '0', '0', '0', '0'],
+            ['1', '1', '1', '1', '1', '1', '0', '1', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '1', '0', '0'],
+            ['0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '1', '0', '1', '0', '0', '1', '1', '0', '0', '0'],
+            ['0', '1', '1', '0', '0', '1', '1', '1', '0', '1', '0', '1', '0', '0', '1', '0', '0', '0', '1', '0', '1', '0', '0', '1', '0'],
+            ['0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '0', '1', '0', '0', '1', '0', '0', '1', '1', '0']
+       ]
+from snake_maze_env import MazeSnakeGameEnv
+env = MazeSnakeGameEnv(maze, height = len(maze), width = len(maze[0]), snake_growth = False, boundary_loop = False)
+valid = [['k']*30]*30
+for i in range(24):
+    for j in range(24):
+        valid[i][j] = env.valid_actions(env.action_space, previous_action = None, return_co_ords = True, from_position = (i, j))
+
+print(f'\n valid_actions: {valid}')
+
+'''
