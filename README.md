@@ -11,5 +11,8 @@
 * it will generate data file: fixed_destination.json
 
 # step2: Training the model
-* run cells in notebook: model_training.ipynb
+* see: `model_training.ipynb`
 
+
+# Note:
+    * Decision Tree classifier gives 100% accuracy
