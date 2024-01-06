@@ -1,3 +1,8 @@
+## * **note: old code is in branch called ["old-code"](https://github.com/AGI-RESEARCH-SEC/snake-game-env/tree/old-code)**
+
+<br>
+<br>
+
 # Introduction:
  * snake game to test how a toy car can be made autonomous
 
