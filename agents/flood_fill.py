@@ -1,3 +1,4 @@
+import pdb
 class FloodFillAgent:
     def __init__(self, env):
         print('\n initialize FloodFillAgent \n')
@@ -7,6 +8,7 @@ class FloodFillAgent:
         print('----------- flood fill -------------')
         visited = set()
         stack = [(start, [])]
+        valid_paths = []
 
         while stack:
             
@@ -14,7 +16,9 @@ class FloodFillAgent:
             self.env.snake = [current]    # update current position in env
 
             if current == goal:
-                return path + [current]
+                valid_paths.append(path + [current])
+                print(f'\n\n --------------- valid_paths --------------- \n\n')
+                # return path + [current]
 
             if current in visited:
                 continue
@@ -28,6 +32,11 @@ class FloodFillAgent:
                 # print(f'neighbours:{neighbors} stack:{stack} current:{current} path: {path} neighbor: {neighbor}')
             
             print(f'----------------------------------------- \n start:{start} \t goal:{goal} \t current: {current} \n neighbours: {neighbors} \n stack: {stack} \n current: {current} \n path: {path} \n neighbor: {neighbor} \n -----------------------------------------')
+        # pdb.set_trace()
+
+        # valid path with minimum length
+        if valid_paths:
+            return min(valid_paths, key=len)
         return None
 
     def get_next_move(self, maze, current_pos, goal):
