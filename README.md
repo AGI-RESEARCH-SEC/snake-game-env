@@ -1,10 +1,12 @@
 # Introduction:
  * snake game to test how a toy car can be made autonomous
 
-# To Run the code:
-* `pip install -r requirements.txt`
+# step1:  Generate data
+* run each cells in generate_data.ipynb
+* it will generate data file: fixed_destination.json
 
-* `python3 main.py`
+# step2: Training the model
+* run cells in notebook: model_training.ipynb
 
 ### **you can play game and it looks something like this:** <br><br><br>
 
