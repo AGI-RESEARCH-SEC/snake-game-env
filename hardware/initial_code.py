@@ -70,10 +70,10 @@ try:
          print('Right')
 
       elif user_input == 'a':
-         GPIO.output(in1,GPIO.HIGH)
+         GPIO.output(in1,GPIO.LOW)
          GPIO.output(in2,GPIO.LOW)
 
-         GPIO.output(in4,GPIO.LOW)
+         GPIO.output(in4,GPIO.HIGH)
          GPIO.output(in3,GPIO.LOW)
          print('Left')
 
