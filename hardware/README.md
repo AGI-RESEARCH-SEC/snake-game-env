@@ -35,8 +35,10 @@ select storage to store => Write
 
 
 # Connecting GPS Sensor
-[youtube](https://www.youtube.com/watch?v=R-6PqdmiBPE)
-[gps-python](https://forums.raspberrypi.com/viewtopic.php?t=244020)
+* [Blog xarg](https://www.xarg.org/2016/06/neo6mv2-gps-module-with-raspberry-pi/)
+* [blog instructables](https://www.instructables.com/Raspberry-Pi-the-Neo-6M-GPS/)
+* [youtube](https://www.youtube.com/watch?v=R-6PqdmiBPE)
+* [gps-python](https://forums.raspberrypi.com/viewtopic.php?t=244020)
 
 sudo raspi-config -> 5 interfacing -> serial -> no login accessable over serial -> serial port hardware enable -> reboot
 
@@ -61,21 +63,21 @@ sudo gpssmon	<monitor using gpsmon>
 
 
 # Magnetometer
-[HMC5883L](https://www.instructables.com/Interfacing-Digital-Compass-HMC5883L-with-Raspberr/)
-[HMC5883L](https://how2electronics.com/interfacing-hmc5883l-magnetometer-with-raspberry-pi/#:~:text=Upon%20integrating%20the%20HMC5883L%20magnetometer,degrees%20becomes%20a%20straightforward%20computation.)q
-[piconet magnetometr](https://www.youtube.com/watch?v=mfqQAHXnZpA)
+* [blog](https://peppe8o.com/magnetometer-with-raspberry-pi-computers-gy-271-hmc5883l-wiring-and-code/)
+* [Blog. HMC5883L](https://www.instructables.com/Interfacing-Digital-Compass-HMC5883L-with-Raspberr/)
+* [Blog HMC5883L](https://how2electronics.com/interfacing-hmc5883l-magnetometer-with-raspberry-pi/#:~:text=Upon%20integrating%20the%20HMC5883L%20magnetometer,degrees%20becomes%20a%20straightforward%20computation.)
+* [video. piconet magnetometr](https://www.youtube.com/watch?v=mfqQAHXnZpA)
 
-[HMC5883L:himalayansolution-Rs.600-](https://himalayansolution.com/product/gy-271-digital-compass-module)
-[HMC5883L:daraz-Rs.1020-](https://www.daraz.com.np/products/hmc5883l-triple-axis-compass-magnetometer-sensor-gy271-i115091197.html)
+* [Himalayan solution: HMC5883L:himalayansolution-Rs.600-](https://himalayansolution.com/product/gy-271-digital-compass-module)
+* [Daraz: HMC5883L:daraz-Rs.1020-](https://www.daraz.com.np/products/hmc5883l-triple-axis-compass-magnetometer-sensor-gy271-i115091197.html)
 
 
 
 
 # Ultrasonic sensor:
-[Blog HC-SR04 pytho](https://randomnerdtutorials.com/micropython-hc-sr04-ultrasonic-esp32-esp8266/)
-[vid. HC-SR04 Ultrasonic Sensor with Raspberry Pi (Python](https://www.youtube.com/watch?v=JvQKZXCYMUM)
-[vid. HC-SR04 python](https://www.youtube.com/watch?v=lrC-o_YE9zI)
-
-
-[hc-sr04:daraz: Rs.190](https://himalayansolution.com/product/ultrasonic-sensor-hc-sr04)
-[hc-sr04:daraz: Rs.290](https://www.daraz.com.np/products/ultrasonic-sensor-hc-sr04-i103568524.html)
+* [vid. sentdex](https://www.youtube.com/watch?v=udu6i1I0mqQ)
+* [Blog HC-SR04 pytho](https://randomnerdtutorials.com/micropython-hc-sr04-ultrasonic-esp32-esp8266/)
+* [vid. HC-SR04 Ultrasonic Sensor with Raspberry Pi (Python](https://www.youtube.com/watch?v=JvQKZXCYMUM)
+* [vid. HC-SR04 python](https://www.youtube.com/watch?v=lrC-o_YE9zI)
+* [hc-sr04:daraz: Rs.190](https://himalayansolution.com/product/ultrasonic-sensor-hc-sr04)
+* [hc-sr04:daraz: Rs.290](https://www.daraz.com.np/products/ultrasonic-sensor-hc-sr04-i103568524.html)
