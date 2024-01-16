@@ -28,6 +28,7 @@ class MotorController:
         self.pwm_b = GPIO.PWM(self.en_b, 100)
         self.pwm_a.start(75)
         self.pwm_b.start(75)
+        self.stop()
 
     def start(self):
         # Method to start the vehicle
@@ -42,31 +43,36 @@ class MotorController:
         print("Vehicle stopped")
 
     def move_forward(self):
+        # Left wheel moves forward
         GPIO.output(self.in1, GPIO.HIGH)
         GPIO.output(self.in2, GPIO.LOW)
+        # Right wheel moves forward
         GPIO.output(self.in4, GPIO.HIGH)
         GPIO.output(self.in3, GPIO.LOW)
         print("Moving forward")
 
     def move_backward(self):
+        # Left wheel moves backward
         GPIO.output(self.in1, GPIO.LOW)
         GPIO.output(self.in2, GPIO.HIGH)
+        # Right wheel moves backward
         GPIO.output(self.in4, GPIO.LOW)
         GPIO.output(self.in3, GPIO.HIGH)
         print("Moving backward")
 
     def move_left(self):
-        GPIO.output(self.in1, GPIO.HIGH)
-        GPIO.output(self.in2, GPIO.LOW)
-        GPIO.output(self.in4, GPIO.LOW)
-        GPIO.output(self.in3, GPIO.LOW)
+        # Left wheel moves forward
+        GPIO.output(self.in1,GPIO.LOW)
+        GPIO.output(self.in2,GPIO.LOW)
+        GPIO.output(self.in4,GPIO.HIGH)
+        GPIO.output(self.in3,GPIO.LOW)
         print("Turning left")
 
     def move_right(self):
-        GPIO.output(self.in1, GPIO.LOW)
-        GPIO.output(self.in2, GPIO.HIGH)
+        GPIO.output(self.in1, GPIO.HIGH)
+        GPIO.output(self.in2, GPIO.LOW)
         GPIO.output(self.in4, GPIO.LOW)
-        GPIO.output(self.in3, GPIO.LOW)
+        GPIO.output(self.in3, GPIO.HIGH)
         print("Turning right")
 
     def cleanup(self):
@@ -110,9 +116,8 @@ def mannual_control():
                 motor_controller.move_left()
             elif command == 'd':
                 motor_controller.move_right()
-            elif command == 'c':
+            elif command == 'c' or command == ' ':
                 motor_controller.stop()
-
     except KeyboardInterrupt:
         motor_controller.cleanup()
 
@@ -128,3 +133,7 @@ def random_walk():
 
     except KeyboardInterrupt:
         motor_controller.cleanup()
+
+if __name__ == "__main__":
+    mannual_control()
+    # random_walk()

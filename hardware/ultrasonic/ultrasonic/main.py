@@ -10,18 +10,13 @@ GPIO.setwarnings(False)
 GPIO.cleanup()
 GPIO.setmode(GPIO.BCM)
 
+
 TRIG1 = 7   # pin 26
 ECHO1 = 8  # pin 24
 
-TRIG2 = 9  # pin 16
-ECHO2 = 10  # pin 18
+TRIG2 = 23
+ECHO2 = 24
 
-
-TRIG1 = 4   # pin 7
-ECHO1 = 18  # pin 12
-
-TRIG2 = 23  # pin 16
-ECHO2 = 24  # pin 18
 
 # Setup trigger and echo pin
 GPIO.setup(TRIG1, GPIO.OUT)

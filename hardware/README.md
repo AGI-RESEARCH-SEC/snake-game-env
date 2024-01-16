@@ -36,6 +36,7 @@ select storage to store => Write
 
 # Connecting GPS Sensor
 * [Blog xarg](https://www.xarg.org/2016/06/neo6mv2-gps-module-with-raspberry-pi/)
+* [blog.maker.pro](https://maker.pro/raspberry-pi/tutorial/how-to-use-a-gps-receiver-with-raspberry-pi-4)
 * [blog instructables](https://www.instructables.com/Raspberry-Pi-the-Neo-6M-GPS/)
 * [youtube](https://www.youtube.com/watch?v=R-6PqdmiBPE)
 * [gps-python](https://forums.raspberrypi.com/viewtopic.php?t=244020)
