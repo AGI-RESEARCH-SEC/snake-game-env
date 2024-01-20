@@ -1,4 +1,4 @@
-const int numMeasurements = 6;  // Number of ultrasonic sensor measurements to average
+const int numMeasurements = 5;  // Number of ultrasonic sensor measurements to average
 int left_threshold = 35;
 int right_threshold = 35;
 int front_threshold = 30;
