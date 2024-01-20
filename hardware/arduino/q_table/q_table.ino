@@ -1,3 +1,8 @@
+const int numMeasurements = 6;  // Number of ultrasonic sensor measurements to average
+int left_threshold = 35;
+int right_threshold = 35;
+int front_threshold = 30;
+
 int motor_lA = 8;
 int motor_lB = 9;
 int motor_enableA = 10;
@@ -6,14 +11,14 @@ int motor_rA = 3;
 int motor_rB = 4;
 int motor_enableB = 5;
 
-int trigger_front = A0;
-int echo_front = A1;
+int trigger_left = A0;
+int echo_left = A1;
 
-int trigger_left = A2;
-int echo_left = A3;
+int trigger_right = A2;
+int echo_right = A3;
 
-int trigger_right = A4;
-int echo_right = A5;
+int trigger_front = A4;
+int echo_front = A5;
 
 // Define the flattened Q-table copied from Python
 float flattened_q_table[] = {-0.14567542786524684, 0.028992119894766844, -0.2658059392757915, 15.500593710459835, -0.15679, -0.5751383360655641, -0.5, -0.7610600150158306, 19.256544264254092, 16.330889837828664, -2.594840781380889, -2.474224227054556, -0.852180077055561, -0.7006457235470309, 12.950534339413846, -2.2842125693118476, -2.776785077874974, -2.6859971955040907, -1.6150456834794744, -1.8485000844551536, 12.096579828480882, -2.7116605133971876, -3.133167873327339, -3.182911142097555};
@@ -81,23 +86,27 @@ void setup() {
 
 void loop() {
   long duration_front, distance_front, duration_left, distance_left, duration_right, distance_right;
+
   int path_right;    // 0 indicate there is path towards right (>=10cm right from current position) || 1 indicate there is obstacle
   int path_left;     // 0 indicate there is path towards left (>=10cm left from current position)
   int path_front;  // 0 indicate there is path towards front (>=35cm forward from current position)
 
   //Controlling speed (0   = off and 255 = max speed):     
   //(Optional)
-  analogWrite(motor_enableA, 80);
-  analogWrite(motor_enableB, 80);
+  analogWrite(motor_enableA, 90);
+  analogWrite(motor_enableB, 100);
   
-  //Calculating distance
-  digitalWrite(trigger_front, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigger_front, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigger_front, LOW);
-  duration_front = pulseIn(echo_front, HIGH);
-  distance_front= duration_front*0.034/2;
+//  //Calculating distance
+//  digitalWrite(trigger_front, LOW);
+//  delayMicroseconds(2);
+//  digitalWrite(trigger_front, HIGH);
+//  delayMicroseconds(10);
+//  digitalWrite(trigger_front, LOW);
+//  duration_front = pulseIn(echo_front, HIGH);
+//  distance_front= duration_front*0.034/2;
+distance_left = measurePreciseDistance(trigger_left, echo_left);
+distance_front = measurePreciseDistance(trigger_right, echo_right);
+distance_front = measurePreciseDistance(trigger_front, echo_front);
 
   digitalWrite(trigger_left, LOW);
   delayMicroseconds(2);
@@ -114,35 +123,41 @@ void loop() {
   digitalWrite(trigger_right, LOW);
   duration_right = pulseIn(echo_right, HIGH);
   distance_right= duration_right*0.034/2;
-
-  Serial.print("front = ");
-  Serial.print(distance_front);
-  Serial.println(" cm");
-  Serial.print("Left = ");
-  Serial.print(distance_left);
-  Serial.println(" cm");
-  Serial.print("Right = ");
-  Serial.print(distance_right);
-  Serial.println(" cm");
-  delay(50);  // pause 50 milli second
   
-  if (distance_left >= 10) {
+  if (distance_left >= left_threshold) {//10
     path_left = 0;
   } else {
     path_left = 1;
   }
   
-  if (distance_right >= 10) {
+  if (distance_right >= right_threshold) {//10
     path_right = 0;
   } else {
     path_right = 1;
   }
   
-  if (distance_front >= 35) {
+  if (distance_front >= front_threshold) {//35
     path_front = 0;
   } else {
     path_front = 1;
   }
+
+  Serial.print("Left = ");
+  Serial.print(path_left);
+  Serial.print("=>");
+  Serial.print(distance_left);
+  Serial.println(" cm");
+  Serial.print("Right = ");
+  Serial.print(path_right);
+  Serial.print("=>");
+  Serial.print(distance_right);
+  Serial.println(" cm");
+  Serial.print("front = ");
+  Serial.print(path_front);
+  Serial.print("=>");
+  Serial.print(distance_front);
+  Serial.println(" cm");
+  delay(50);  // pause 50 milli second
   
   // Print some values from the Q-table for demonstration purposes
 //  Serial.println("Q-table values:");
@@ -164,12 +179,12 @@ void loop() {
 //  int binaryInput1 = 1;
 //  int binaryInput2 = 0;
 //  int binaryInput3 = 1;
-  Serial.print("Path Left: ");
-  Serial.println(path_left);
-  Serial.print("Path Right: ");
-  Serial.println(path_right);
-  Serial.print("Path Front: ");
-  Serial.println(path_front);
+//  Serial.print("Path Left: ");
+//  Serial.println(path_left);
+//  Serial.print("Path Right: ");
+//  Serial.println(path_right);
+//  Serial.print("Path Front: ");
+//  Serial.println(path_front);
   // Convert binary to decimal
   int decimalValue = binaryToDecimal(path_left, path_right, path_front);
 
@@ -177,41 +192,41 @@ void loop() {
   float q_values[num_actions];
   // Replace this with your actual Q-table lookup code
   // Assuming you have the row for the given state (decimalValue) in the Q-table
-  Serial.println("Q-values:");
+//  Serial.println("Q-values:");
   for (int action = 0; action < num_actions; ++action) {
     q_values[action] = q_table[decimalValue][action];
-    Serial.println(q_table[decimalValue][action]);
+//    Serial.println(q_table[decimalValue][action]);
   }
-  Serial.println("Thats it.");
+//  Serial.println("Thats it.");
 
   // Find the action with the maximum Q-value
   int maxAction = findMaxAction(q_values, num_actions);
 
 
   // Print the result
-  Serial.print("State: ");
+//  Serial.print("State: ");
   Serial.print(decimalValue);
   Serial.print(" -> Max Action: ");
   Serial.println(maxAction);
 
-  delay(15000);  // Delay for 15 seconds before printing again
+//  delay(1000);  // Delay for 15 seconds before printing again
   
   // Invoke functions based on the max action
   switch (maxAction) {
     case 0:
-      Serial.println("This is definitely forward.");
-      forward();
+      Serial.println("Decision: Left");
+      left();
       //      turnLeft();
       break;
     case 1:
-      Serial.println("Left. brrrrrmmmmrrr....");
-      left();
+      Serial.println("Decision: Right.");
+      right();
       // Perform action for the second action
       // Example: turnRight();
       break;
     case 2:
-      Serial.println("Right Turn, Right Turn.");
-      right();
+      Serial.println("Forward");
+      forward();
       // Perform action for the third action
       // Example: moveForward();
       break;
@@ -225,39 +240,69 @@ void loop() {
 }
 
 
-void forward()
-{
-  digitalWrite(motor_lA,HIGH);
-  digitalWrite(motor_lB,LOW);
-  digitalWrite(motor_rA,HIGH);
-  digitalWrite(motor_rB,LOW);
-  delay(1000);
+void right() {
+  digitalWrite(motor_lA, HIGH);
+  digitalWrite(motor_lB, LOW);
+  digitalWrite(motor_rA, HIGH);
+  digitalWrite(motor_rB, LOW);
+  delay(1900);
+  Stop();
 }
 
-
-void right(){
-  digitalWrite(motor_lA,HIGH);
-  digitalWrite(motor_lB,LOW);
-  digitalWrite(motor_rA,LOW);
-  digitalWrite(motor_rB,HIGH);
- delay(10);
+void forward() {
+  digitalWrite(motor_lA, HIGH);
+  digitalWrite(motor_lB, LOW);
+  digitalWrite(motor_rA, LOW);
+  digitalWrite(motor_rB, HIGH);
+  delay(1500);
+  Stop();
 }
 
-
-void left(){
-  digitalWrite(motor_lA,LOW);
-  digitalWrite(motor_lB,HIGH);
-  digitalWrite(motor_rA,HIGH);
-  digitalWrite(motor_rB,LOW);
-  delay(10);
+void back() {
+  digitalWrite(motor_lA, LOW);
+  digitalWrite(motor_lB, HIGH);
+  digitalWrite(motor_rA, HIGH);
+  digitalWrite(motor_rB, LOW);
+  delay(3000);
+  Stop();
 }
 
+void left() {
+  digitalWrite(motor_lA, LOW);
+  digitalWrite(motor_lB, HIGH);
+  digitalWrite(motor_rA, LOW);
+  digitalWrite(motor_rB, HIGH);
+  delay(1750);
+  Stop();
+}
 
-
-void Stop(){
-  digitalWrite(motor_lA,LOW);
-  digitalWrite(motor_lB,LOW);
-  digitalWrite(motor_rA,LOW);
-  digitalWrite(motor_rB,LOW);
+void Stop() {
+  digitalWrite(motor_lA, LOW);
+  digitalWrite(motor_lB, LOW);
+  digitalWrite(motor_rA, LOW);
+  digitalWrite(motor_rB, LOW);
   delay(300);
+}
+
+long measurePreciseDistance(int trigPin, int echoPin) {
+  long totalDistance = 0;
+
+  for (int i = 0; i < numMeasurements; ++i) {
+    totalDistance += measureSingleDistance(trigPin, echoPin);
+    delay(50);  // Delay between measurements
+  }
+
+  // Calculate and return the average distance
+  return totalDistance / numMeasurements;
+}
+
+long measureSingleDistance(int trigPin, int echoPin) {
+  // Measure distance using ultrasonic sensor for a single reading
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  return pulseIn(echoPin, HIGH) * 0.034 / 2;
 }
