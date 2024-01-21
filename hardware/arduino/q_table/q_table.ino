@@ -240,13 +240,14 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
 }
 
 
-void right() {
+void left() {
   digitalWrite(motor_lA, HIGH);
   digitalWrite(motor_lB, LOW);
   digitalWrite(motor_rA, HIGH);
   digitalWrite(motor_rB, LOW);
   delay(1900);
   Stop();
+  forward();
 }
 
 void forward() {
@@ -267,7 +268,7 @@ void back() {
   Stop();
 }
 
-void left() {
+void right() {
   digitalWrite(motor_lA, LOW);
   digitalWrite(motor_lB, HIGH);
   digitalWrite(motor_rA, LOW);
