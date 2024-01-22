@@ -7,7 +7,8 @@ int left_threshold = 35;
 int right_threshold = 35;
 int front_threshold = 30;
 
-float initialDirection = 100.0; // angle(degrees) for initial direction
+float initialDirection = 100.0; // angle (degrees) for initial direction
+float DeviationThreshold = 20.0; // angle (degrees) deviation threshold
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 
