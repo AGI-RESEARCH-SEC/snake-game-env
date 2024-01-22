@@ -153,7 +153,7 @@ void rotate(float target_degrees, float target_error) {
 //  Serial.print("deviation3: ");  Serial.println(deviation3);
 //  Serial.print("deviation4: ");  Serial.println(deviation4);
 
-  if (deviation > target_error) {
+  if (deviation_threshold > target_error) {
     // Adjust the relationship between deviation and duration based on your requirements
     int duration = map(deviation, 0, 180, 200, 2000);
     /*
@@ -172,6 +172,9 @@ void rotate(float target_degrees, float target_error) {
       right(duration);
     }
   }
+//  else {
+//    delay(1000);
+//  }
 }
 
 void setup() {
@@ -253,4 +256,3 @@ rotate(left_angle, targetDirectionError);
 
   
 }
-
