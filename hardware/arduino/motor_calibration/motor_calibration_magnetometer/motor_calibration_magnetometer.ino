@@ -1,3 +1,7 @@
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_HMC5883_U.h>
+
 int motor_lA = 8;
 int motor_lB = 9;
 int motor_enableA = 10;
@@ -5,13 +9,8 @@ int motor_enableA = 10;
 int motor_rA = 3;
 int motor_rB = 4;
 int motor_enableB = 5;
-float initialDirection = 100.0;
-
-
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_HMC5883_U.h>
-
+float initialDirection = 100.0; // angle (degrees) for initial direction
+float DeviationThreshold = 20.0; // angle (degrees) deviation threshold
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 
@@ -126,55 +125,86 @@ void Stop() {
 
 
 // Function to rotate towards the target direction
-void rotate(float target_degrees, float target_error) {
-  // Get magnetic heading angle in degrees
-  float heading_degrees = getMagneticHeading();
-  
-  // Check if the car is not facing towards the target direction
+void move_it(int action) {
+  //actions: [0, 1, 2] represent ["left", "right", "forward"] respectively
+  float target_degrees;
+  float heading_degrees;
+  float deviation1;
+  float deviation2;
+  float deviation;
+  Serial.println("======================");Serial.println("Moving ");Serial.println(action);Serial.println("======================");
+   if (action == 0) {
+    target_degrees = initialDirection + 90;   // rotate left
+    Serial.println("======================");Serial.println("Moving Left");Serial.println("======================");
+  } else if (action == 1) {
+    target_degrees = initialDirection - 90;   // rotate right
+    Serial.println("======================");Serial.println("Moving Right");Serial.println("======================");
+  } else if (action == 2) {
+    Serial.println("======================");Serial.println("Moving Forward");Serial.println("======================");
+    forward();  // move forward
+    return;
+  }
+
+
+  heading_degrees = getMagneticHeading();
   heading_degrees = fmod(heading_degrees, 360.0);
-  //  float deviation1 = fmod(abs(heading_degrees - target_degrees), 360.0);
-  //  float deviation2 = fmod(abs(target_degrees - heading_degrees), 360.0);
-  /*
-      * `fmod(-3, 4)` gives -3
-      * the work-around is: `fmod(fmod(-3, 4) + 4, 4)` which gives 1
-      * for positive numbers, the functionality is same as using single fmod. e.g. fmod(fmod(3, 4) + 4, 4) gives 3.
+  deviation1 = fmod(fmod(heading_degrees - target_degrees, 360.0)+360, 360);
+  deviation2 = fmod(fmod(target_degrees - heading_degrees, 360.0)+360, 360);
+  deviation = min(deviation1, deviation2);
+  //  float targetDirection = 97.0;  // Assuming the target direction is 90 degrees (east)
+  //  float targetDirectionError = 20.0;
+  while (deviation > DeviationThreshold) {
+    // Get magnetic heading angle in degrees
+    heading_degrees = getMagneticHeading();
     
-  */
-  float deviation1 = fmod(fmod(heading_degrees - target_degrees, 360.0)+360, 360);
-  float deviation2 = fmod(fmod(target_degrees - heading_degrees, 360.0)+360, 360);
-  float deviation = min(deviation1, deviation2);
-
-  Serial.print("Heading : "); Serial.println(heading_degrees);
-  Serial.print("Target : "); Serial.println(target_degrees);
-  Serial.print("deviation1: ");  Serial.println(deviation1);
-  Serial.print("deviation2: ");  Serial.println(deviation2);
-  Serial.print("deviation: ");  Serial.println(deviation);
-  Serial.println("\n\n");
-//  Serial.print("deviation3: ");  Serial.println(deviation3);
-//  Serial.print("deviation4: ");  Serial.println(deviation4);
-
-  if (deviation_threshold > target_error) {
-    // Adjust the relationship between deviation and duration based on your requirements
-    int duration = map(deviation, 0, 180, 200, 2000);
+    // Check if the car is not facing towards the target direction
+    heading_degrees = fmod(heading_degrees, 360.0);
+    //  float deviation1 = fmod(abs(heading_degrees - target_degrees), 360.0);
+    //  float deviation2 = fmod(abs(target_degrees - heading_degrees), 360.0);
     /*
-      deviation: This is the value you want to map, in this case, it's the deviation angle.
-      0: This is the lower bound of the original range. In this context, it assumes that deviation can range from 0 to 180 degrees.
-      180: This is the upper bound of the original range. It indicates the maximum possible value for the deviation variable.
-      50: This is the lower bound of the target range. It represents the minimum value you want to map deviation to.
-      2000: This is the upper bound of the target range. It represents the maximum value 
+        * `fmod(-3, 4)` gives -3
+        * the work-around is: `fmod(fmod(-3, 4) + 4, 4)` which gives 1
+        * for positive numbers, the functionality is same as using single fmod. e.g. fmod(fmod(3, 4) + 4, 4) gives 3.
+      
     */
-
-    if (deviation1 < deviation2) {
-      // If deviation is positive, move left
-      left(duration);
-    } else {
-      // If deviation is negative, move right
-      right(duration);
+    float deviation1 = fmod(fmod(heading_degrees - target_degrees, 360.0)+360, 360);
+    float deviation2 = fmod(fmod(target_degrees - heading_degrees, 360.0)+360, 360);
+    float deviation = min(deviation1, deviation2);
+  
+    Serial.print("Heading : "); Serial.println(heading_degrees);
+    Serial.print("Target : "); Serial.println(target_degrees);
+    Serial.print("deviation1: ");  Serial.println(deviation1);
+    Serial.print("deviation2: ");  Serial.println(deviation2);
+    Serial.print("deviation: ");  Serial.println(deviation);
+    Serial.println("\n\n");
+  //  Serial.print("deviation3: ");  Serial.println(deviation3);
+  //  Serial.print("deviation4: ");  Serial.println(deviation4);
+  
+    if (deviation > DeviationThreshold) {
+      // Adjust the relationship between deviation and duration based on your requirements
+      int duration = map(deviation, 0, 180, 200, 2000);
+      /*
+        deviation: This is the value you want to map, in this case, it's the deviation angle.
+        0: This is the lower bound of the original range. In this context, it assumes that deviation can range from 0 to 180 degrees.
+        180: This is the upper bound of the original range. It indicates the maximum possible value for the deviation variable.
+        50: This is the lower bound of the target range. It represents the minimum value you want to map deviation to.
+        2000: This is the upper bound of the target range. It represents the maximum value 
+      */
+  
+      if (deviation1 < deviation2) {
+        // If deviation is positive, move left
+        left(duration);
+      } else {
+        // If deviation is negative, move right
+        right(duration);
+      }
+    }
+    else {
+      return;
+      // delay(1000);
     }
   }
-//  else {
-//    delay(1000);
-//  }
+  return;
 }
 
 void setup() {
@@ -186,8 +216,11 @@ void setup() {
   pinMode(motor_rB, OUTPUT);   // right motors reverse
   pinMode(motor_enableB, OUTPUT);   // optional
   
-//  Serial.print("Initial Direction (degrees): "); //Serial.println(initialDirection);
+ Serial.print("Initial Direction (degrees): "); Serial.println(initialDirection);
   // ==========================================
+  // ============= Magnetometer ===============
+  // ==========================================
+
   Serial.println("HMC5883 Magnetometer Test");
   Serial.println("");
   /* Initialise the sensor */
@@ -207,7 +240,7 @@ void setup() {
 
 void loop() {
 //  Serial.print("Initial Direction (degrees): "); Serial.println(initialDirection);
-  float initialDirection = 100.0;
+  // float initialDirection = 100.0;
   float right_angle = fmod((initialDirection - 90.0), 360.0);
   float left_angle = fmod((initialDirection + 90.0), 360.0);
   //(Optional)
@@ -223,15 +256,18 @@ void loop() {
 //  Serial.print("Heading (degrees): "); Serial.println(headingDegrees);
 
   // Set your target direction (adjust as needed)
-  float targetDirection = 97.0;  // Assuming the target direction is 90 degrees (east)
-  float targetDirectionError = 20.0;
+//  float targetDirection = 97.0;  // Assuming the target direction is 90 degrees (east)
+//  float targetDirectionError = 20.0;
 
 //  rotate(initialDirection, headingDegrees, targetDirectionError);
-rotate(left_angle, targetDirectionError);
-
+//move_it(0);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+//delay(5000);
+//move_it(1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+//delay(5000);
+move_it(2);  //actions: [0, 1, 2] are ["left", right, forward respectively]
 //// ===========================================================================
 
-//  delay(5000);
+  
 //  
   
   

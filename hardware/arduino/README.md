@@ -4,7 +4,7 @@
 
 ## Path Calibration:
 * [Magnetometer-Reference](https://forum.arduino.cc/t/not-reading-a-magnetic-sensor/561257/2)
-
+* Install two libraries: `Adafruit HMC5883 Unified` and `Adafruit Unified Sensor`
 ### ** Working: **
 ```
 deviation1 = (heading_degrees - target_degrees) % 360
