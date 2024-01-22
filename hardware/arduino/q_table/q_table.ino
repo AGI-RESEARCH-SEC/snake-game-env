@@ -7,7 +7,7 @@ int left_threshold = 35;
 int right_threshold = 35;
 int front_threshold = 30;
 
-float initialDirection = 100.0; // angle (degrees) for initial direction
+float initialDirection = 70;// 100.0; // angle (degrees) for initial direction
 float DeviationThreshold = 20.0; // angle (degrees) deviation threshold
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
@@ -27,8 +27,8 @@ int echo_left = A1;
 int trigger_right = A2;
 int echo_right = A3;
 
-int trigger_front = A4;
-int echo_front = A5;
+int trigger_front = 12; //A4;
+int echo_front = 13;    //A5;
 
 // Define the flattened Q-table copied from Python
 float flattened_q_table[] = {-0.14567542786524684, 0.028992119894766844, -0.2658059392757915, 15.500593710459835, -0.15679, -0.5751383360655641, -0.5, -0.7610600150158306, 19.256544264254092, 16.330889837828664, -2.594840781380889, -2.474224227054556, -0.852180077055561, -0.7006457235470309, 12.950534339413846, -2.2842125693118476, -2.776785077874974, -2.6859971955040907, -1.6150456834794744, -1.8485000844551536, 12.096579828480882, -2.7116605133971876, -3.133167873327339, -3.182911142097555};
@@ -104,6 +104,9 @@ void right(int delay_parameter = 1750, bool move_forward=0) {
   digitalWrite(motor_rB, HIGH);
   delay(delay_parameter);
   Stop();
+  if (move_forward == 1){
+    forward();
+  }
 }
 
 void Stop() {
@@ -471,41 +474,6 @@ void left() {
   delay(1900);
   Stop();
   forward();
-}
-
-void forward() {
-  digitalWrite(motor_lA, HIGH);
-  digitalWrite(motor_lB, LOW);
-  digitalWrite(motor_rA, LOW);
-  digitalWrite(motor_rB, HIGH);
-  delay(1500);
-  Stop();
-}
-
-void back() {
-  digitalWrite(motor_lA, LOW);
-  digitalWrite(motor_lB, HIGH);
-  digitalWrite(motor_rA, HIGH);
-  digitalWrite(motor_rB, LOW);
-  delay(3000);
-  Stop();
-}
-
-void right() {
-  digitalWrite(motor_lA, LOW);
-  digitalWrite(motor_lB, HIGH);
-  digitalWrite(motor_rA, LOW);
-  digitalWrite(motor_rB, HIGH);
-  delay(1750);
-  Stop();
-}
-
-void Stop() {
-  digitalWrite(motor_lA, LOW);
-  digitalWrite(motor_lB, LOW);
-  digitalWrite(motor_rA, LOW);
-  digitalWrite(motor_rB, LOW);
-  delay(300);
 }
 
 long measurePreciseDistance(int trigPin, int echoPin) {
