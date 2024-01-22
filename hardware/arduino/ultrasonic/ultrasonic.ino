@@ -7,8 +7,8 @@
  * by Isaac100
  */
 
-const int trigPin = A0;
-const int echoPin = A1;
+const int trigPin = 12;//A0
+const int echoPin = 13;//A1
 
 float duration, distance;
 
