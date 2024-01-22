@@ -7,7 +7,8 @@ int left_threshold = 35;
 int right_threshold = 35;
 int front_threshold = 30;
 
-float initialDirection = 70;// 100.0; // angle (degrees) for initial direction
+int use_compass_caliberation = 0; // turn on/off the compass calibration. 1 is on. 2 is off. 
+float initialDirection = 70;// 100.0; // angle (degrees) the bot is facing initially.
 float DeviationThreshold = 20.0; // angle (degrees) deviation threshold
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
@@ -75,7 +76,7 @@ void left(int delay_parameter = 1900, bool move_forward=0) {
   }
 }
 
-void forward() {
+void forward(int delay_parameter = 1500) {
   Serial.println("Forward");
   digitalWrite(motor_lA, HIGH);
   digitalWrite(motor_lB, LOW);
@@ -179,7 +180,7 @@ float getMagneticHeading() {
 
 
 // Function to rotate towards the target direction
-void move_it(int action) {
+void move_using_compass_caliberation(int action) {
   //actions: [0, 1, 2] represent ["left", "right", "forward"] respectively
   float target_degrees;
   float heading_degrees;
@@ -438,21 +439,27 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
   switch (maxAction) {
     case 0:
       Serial.println("Decision: Left");
-      move_it(0); // Left by magnetometer caliberation
-      // left();
-      //      turnLeft();
+      if (use_compass_caliberation == 1){
+        move_using_compass_caliberation(0); // Left by magnetometer caliberation
+      } else {
+        left(1900, 1);
+        //      turnLeft();
+        }
       break;
     case 1:
       Serial.println("Decision: Right.");
-      move_it(1); // Right by magnetometer caliberation
-      // right();
-      // Perform action for the second action
-      // Example: turnRight();
+      if (use_compass_caliberation == 1){
+          move_using_compass_caliberation(1); // Right by magnetometer caliberation
+      } else {
+         right(1750, 1);
+        // Perform action for the second action
+        // Example: turnRight();
+      }
       break;
     case 2:
       Serial.println("Forward");
-      move_it(2); // Forward
-      // forward();
+      // move_using_compass_caliberation(2); // Forward
+      forward();
       // Perform action for the third action
       // Example: moveForward();
       break;
@@ -465,16 +472,6 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
   }
 }
 
-
-void left() {
-  digitalWrite(motor_lA, HIGH);
-  digitalWrite(motor_lB, LOW);
-  digitalWrite(motor_rA, HIGH);
-  digitalWrite(motor_rB, LOW);
-  delay(1900);
-  Stop();
-  forward();
-}
 
 long measurePreciseDistance(int trigPin, int echoPin) {
   long totalDistance = 0;
