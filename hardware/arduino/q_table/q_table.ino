@@ -7,8 +7,11 @@ int left_threshold = 35;
 int right_threshold = 35;
 int front_threshold = 30;
 
+int continuous_actions = 1; // 0 Represent Delay after each action; 1 Represent Discrete actions
+
 int use_compass_caliberation = 0; // turn on/off the compass calibration. 1 is on. 2 is off. 
-float initialDirection = 70;// 100.0; // angle (degrees) the bot is facing initially.
+// float initialDirection = 70;// 100.0; // angle (degrees) the bot is facing initially.
+float initialDirection = 210;// college // angle (degrees) the bot is facing initially.
 float DeviationThreshold = 20.0; // angle (degrees) deviation threshold
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
@@ -35,7 +38,7 @@ int echo_front = 13;    //A5;
 //float flattened_q_table[] = {-0.14567542786524684, 0.028992119894766844, -0.2658059392757915, 15.500593710459835, -0.15679, -0.5751383360655641, -0.5, -0.7610600150158306, 19.256544264254092, 16.330889837828664, -2.594840781380889, -2.474224227054556, -0.852180077055561, -0.7006457235470309, 12.950534339413846, -2.2842125693118476, -2.776785077874974, -2.6859971955040907, -1.6150456834794744, -1.8485000844551536, 12.096579828480882, -2.7116605133971876, -3.133167873327339, -3.182911142097555};
 
 // Maze-3: Obstacle Avoidance
-float flattened_q_table[] = {0.0, 0.0, 0.0, -8.038707105143146, -8.082612249219368, -8.075357976574818, 0.0, 0.0, 0.0, -6.647911287348904, -8.350614717222712, -8.359131172256962, 0.0, 0.0, 0.0, -8.401727003925874, -7.051792274204917, -8.407046054870735, -8.05865436530638, -8.055914330703747, -7.195154863191697, -8.159045656801942, -8.353843068419978, -8.358464332980923}
+float flattened_q_table[] = {0.0, 0.0, 0.0, -8.038707105143146, -8.082612249219368, -8.075357976574818, 0.0, 0.0, 0.0, -6.647911287348904, -8.350614717222712, -8.359131172256962, 0.0, 0.0, 0.0, -8.401727003925874, -7.051792274204917, -8.407046054870735, -8.05865436530638, -8.055914330703747, -7.195154863191697, -8.159045656801942, -8.353843068419978, -8.358464332980923};
 
 // Define the number of states and actions
 const int num_states = 8;  // 2^3
@@ -65,9 +68,22 @@ int findMaxAction(float q_values[], int num_actions) {
   return maxIndex;
 }
 
+void forward(int delay_parameter = 1000) {
+  Serial.println("Forward");
+  digitalWrite(motor_lA, HIGH);
+  digitalWrite(motor_lB, LOW);
+  digitalWrite(motor_rA, LOW);
+  digitalWrite(motor_rB, HIGH);
+  
+  if (continuous_actions != 1){
+    // agent takes continuous actions
+    delay(1500);
+    Stop();
+  }
+}
 
-void left(int delay_parameter = 1900, bool move_forward=0) {
-  Serial.println("Left");
+void right(int delay_parameter = 1020, bool move_forward=1) {// 1200
+  Serial.println("Right");
   digitalWrite(motor_lA, HIGH);
   digitalWrite(motor_lB, LOW);
   digitalWrite(motor_rA, HIGH);
@@ -79,28 +95,8 @@ void left(int delay_parameter = 1900, bool move_forward=0) {
   }
 }
 
-void forward(int delay_parameter = 1500) {
-  Serial.println("Forward");
-  digitalWrite(motor_lA, HIGH);
-  digitalWrite(motor_lB, LOW);
-  digitalWrite(motor_rA, LOW);
-  digitalWrite(motor_rB, HIGH);
-  delay(1500);
-  Stop();
-}
-
-void back() {
-  Serial.println("Back");
-  digitalWrite(motor_lA, LOW);
-  digitalWrite(motor_lB, HIGH);
-  digitalWrite(motor_rA, HIGH);
-  digitalWrite(motor_rB, LOW);
-  delay(3000);
-  Stop();
-}
-
-void right(int delay_parameter = 1750, bool move_forward=0) {
-  Serial.println("Right");
+void left(int delay_parameter = 1000, bool move_forward=1) {// 1250
+  Serial.println("Left");
   Serial.println(delay_parameter);
   digitalWrite(motor_lA, LOW);
   digitalWrite(motor_lB, HIGH);
@@ -111,6 +107,16 @@ void right(int delay_parameter = 1750, bool move_forward=0) {
   if (move_forward == 1){
     forward();
   }
+}
+
+void back() {
+  Serial.println("Back");
+  digitalWrite(motor_lA, LOW);
+  digitalWrite(motor_lB, HIGH);
+  digitalWrite(motor_rA, HIGH);
+  digitalWrite(motor_rB, LOW);
+  delay(3000);
+  Stop();
 }
 
 void Stop() {
@@ -320,8 +326,8 @@ void loop() {
 
   //Controlling speed (0   = off and 255 = max speed):     
   //(Optional)
-  analogWrite(motor_enableA, 90);
-  analogWrite(motor_enableB, 100);
+  analogWrite(motor_enableA, 90);  // 90
+  analogWrite(motor_enableB, 100);  // 100
   
 //  //Calculating distance
 //  digitalWrite(trigger_front, LOW);
@@ -368,7 +374,15 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
   } else {
     path_front = 1;
   }
+  // ==================================
+  // Check if goal is reached
+  // ==================================
+  if ((path_left==1) && (path_right==1) && (path_front==1)){
+    Serial.print("============================");Serial.print("============= Reached Goal ========");Serial.println("============================");
+    Stop();
+    delay(30000000000);  // Sleep For 3 seconds
 
+  }
   Serial.print("Left = ");
   Serial.print(path_left);
   Serial.print("=>");
@@ -445,7 +459,7 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
       if (use_compass_caliberation == 1){
         move_using_compass_caliberation(0); // Left by magnetometer caliberation
       } else {
-        left(1900, 1);
+        left();
         //      turnLeft();
         }
       break;
@@ -454,7 +468,7 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
       if (use_compass_caliberation == 1){
           move_using_compass_caliberation(1); // Right by magnetometer caliberation
       } else {
-         right(1750, 1);
+         right();
         // Perform action for the second action
         // Example: turnRight();
       }
