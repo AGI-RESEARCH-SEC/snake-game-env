@@ -1,5 +1,5 @@
 ## Arduino Q-Learning implementation
-* We trained RL agent using Q-Learning [here]()
+* We trained RL agent using Q-Learning [here](https://github.com/AGI-RESEARCH-SEC/snake-game-env/blob/main/q_learning.ipynb)
 * Then flattened the weights and used those weights to make decisions.
 
 ## Maze-1
