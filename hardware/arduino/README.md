@@ -1,5 +1,7 @@
 # Arduino
-* 
+
+## async.
+- define motor speed within forward/left/right functions seperately
 
 
 ## Path Calibration:

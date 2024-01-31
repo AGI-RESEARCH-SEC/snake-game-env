@@ -9,8 +9,14 @@ int motor_enableA = 10;
 int motor_rA = 3;
 int motor_rB = 4;
 int motor_enableB = 5;
-float initialDirection = 100.0; // angle (degrees) for initial direction
-float DeviationThreshold = 20.0; // angle (degrees) deviation threshold
+float initialDirection = 85; //(85 for IT class facing white-board) 100.0; // angle (degrees) for initial direction
+float leftAngle = 147;
+float rightAngle = 22;
+float northAngle = 0;
+float westAngle = 111;
+float southAngle =  256;
+float eastAngle = 216;
+float DeviationThreshold = 10.0; // angle (degrees) deviation threshold
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 
@@ -28,6 +34,47 @@ void displaySensorDetails(void) {
   Serial.println("");
   delay(500);
 }
+
+
+// Function to get the nearest cardinal direction
+float getNearestDirection(float currentAngle) {
+    // Pre-stored angles for cardinal directions
+    float northAngle = 0.0f;
+    float southAngle = 180.0f;
+    float eastAngle = 90.0f;
+    float westAngle = 270.0f;
+
+    // Calculate the angular difference from each cardinal direction
+    float diffNorth = fabs(currentAngle - northAngle);
+    float diffSouth = fabs(currentAngle - southAngle);
+    float diffEast = fabs(currentAngle - eastAngle);
+    float diffWest = fabs(currentAngle - westAngle);
+
+    // Find the minimum difference using a ternary operator
+    float minDiff = (diffNorth < diffSouth) ? diffNorth : diffSouth;
+    minDiff = (diffEast < minDiff) ? diffEast : minDiff;
+    minDiff = (diffWest < minDiff) ? diffWest : minDiff;
+
+    // Determine the nearest direction based on the minimum difference
+    if (minDiff == diffNorth) {
+        Serial.print("north it is");
+        return northAngle;
+
+    } else if (minDiff == diffSouth) {
+        Serial.println("south it is");
+        return southAngle;
+    } else if (minDiff == diffEast) {
+        Serial.println("east it is");
+        return eastAngle;
+    } else {
+        Serial.println("west it is");
+        return westAngle;
+    }
+}
+
+
+
+
 
 // Function to get magnetic sensor coordinates
 void getMagneticCoordinates(float &x, float &y, float &z) {
@@ -70,20 +117,26 @@ float getMagneticHeading() {
   return headingDegrees;
 }
 
-void left(int delay_parameter = 1900, bool move_forward=0) {
+void left(int delay_parameter = 1900, bool move_forward=0, int cont=1) {
   Serial.println("Left");
   digitalWrite(motor_lA, HIGH);
   digitalWrite(motor_lB, LOW);
   digitalWrite(motor_rA, HIGH);
   digitalWrite(motor_rB, LOW);
-  delay(delay_parameter);
-  Stop();
-  if (move_forward == 1){
-    forward();
+  if (cont != 1){
+    // Discrete Motion for delay_parameter_seconds
+    delay(delay_parameter);
+    Stop();
+    if (move_forward == 1){
+      forward();
+    }
   }
 }
 
 void forward() {
+  analogWrite(motor_enableA, 90);//90
+  analogWrite(motor_enableB, 100);//100
+
   Serial.println("Forward");
   digitalWrite(motor_lA, HIGH);
   digitalWrite(motor_lB, LOW);
@@ -103,15 +156,18 @@ void back() {
   Stop();
 }
 
-void right(int delay_parameter = 1750, bool move_forward=0) {
+void right(int delay_parameter = 1750, bool move_forward=0, int cont=1) {
   Serial.println("Right");
   Serial.println(delay_parameter);
   digitalWrite(motor_lA, LOW);
   digitalWrite(motor_lB, HIGH);
   digitalWrite(motor_rA, LOW);
   digitalWrite(motor_rB, HIGH);
-  delay(delay_parameter);
-  Stop();
+  if (cont != 1){
+    // Discrete Motion for delay_parameter_seconds
+    delay(delay_parameter);
+    Stop();
+  }
 }
 
 void Stop() {
@@ -132,12 +188,14 @@ void move_it(int action) {
   float deviation1;
   float deviation2;
   float deviation;
-  Serial.println("======================");Serial.println("Moving ");Serial.println(action);Serial.println("======================");
+  Serial.println("======================");Serial.println("Moving ");Serial.println(action);Serial.println("/nheading_degrees");Serial.println(heading_degrees);Serial.println("======================");
    if (action == 0) {
     target_degrees = initialDirection + 90;   // rotate left
+    target_degrees = leftAngle;
     Serial.println("======================");Serial.println("Moving Left");Serial.println("======================");
   } else if (action == 1) {
     target_degrees = initialDirection - 90;   // rotate right
+    target_degrees = rightAngle; //
     Serial.println("======================");Serial.println("Moving Right");Serial.println("======================");
   } else if (action == 2) {
     Serial.println("======================");Serial.println("Moving Forward");Serial.println("======================");
@@ -147,13 +205,18 @@ void move_it(int action) {
 
 
   heading_degrees = getMagneticHeading();
+  Serial.println("original heading degreees amigo: ");Serial.print(heading_degrees);
   heading_degrees = fmod(heading_degrees, 360.0);
+  Serial.println(getNearestDirection(heading_degrees));
+
+
   deviation1 = fmod(fmod(heading_degrees - target_degrees, 360.0)+360, 360);
   deviation2 = fmod(fmod(target_degrees - heading_degrees, 360.0)+360, 360);
   deviation = min(deviation1, deviation2);
   //  float targetDirection = 97.0;  // Assuming the target direction is 90 degrees (east)
   //  float targetDirectionError = 20.0;
   while (deviation > DeviationThreshold) {
+    // delay(500);
     // Get magnetic heading angle in degrees
     heading_degrees = getMagneticHeading();
     
@@ -177,12 +240,15 @@ void move_it(int action) {
     Serial.print("deviation2: ");  Serial.println(deviation2);
     Serial.print("deviation: ");  Serial.println(deviation);
     Serial.println("\n\n");
+    Serial.println("original heading degreees amigo: ");Serial.print(heading_degrees);
+  Serial.println(getNearestDirection(heading_degrees));
   //  Serial.print("deviation3: ");  Serial.println(deviation3);
   //  Serial.print("deviation4: ");  Serial.println(deviation4);
   
     if (deviation > DeviationThreshold) {
       // Adjust the relationship between deviation and duration based on your requirements
-      int duration = map(deviation, 0, 180, 200, 2000);
+      int duration = map(deviation, 0, 180, 10, 450); // 200,2000
+      // delay(1000);
       /*
         deviation: This is the value you want to map, in this case, it's the deviation angle.
         0: This is the lower bound of the original range. In this context, it assumes that deviation can range from 0 to 180 degrees.
@@ -193,17 +259,18 @@ void move_it(int action) {
   
       if (deviation1 < deviation2) {
         // If deviation is positive, move left
-        left(duration);
+        // left(duration);
+        left();
       } else {
         // If deviation is negative, move right
-        right(duration);
+        right();
       }
     }
     else {
       return;
       // delay(1000);
     }
-  }
+  }Stop();
   return;
 }
 
@@ -244,8 +311,8 @@ void loop() {
   float right_angle = fmod((initialDirection - 90.0), 360.0);
   float left_angle = fmod((initialDirection + 90.0), 360.0);
   //(Optional)
-  analogWrite(motor_enableA, 90);
-  analogWrite(motor_enableB, 100);
+  analogWrite(motor_enableA, 180);//90
+  analogWrite(motor_enableB, 200);//100
 // ===========================================================================
 //  Serial.print("turn left"); 
 //  left();
@@ -264,7 +331,14 @@ void loop() {
 //delay(5000);
 //move_it(1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
 //delay(5000);
+move_it(0);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+delay(5000);
+move_it(1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+delay(5000);
 move_it(2);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+delay(5000);
+
+// move_it(2);
 //// ===========================================================================
 
   
