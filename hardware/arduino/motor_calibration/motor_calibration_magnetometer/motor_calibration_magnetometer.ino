@@ -134,8 +134,8 @@ void left(int delay_parameter = 1900, bool move_forward=0, int cont=1) {
 }
 
 void forward() {
-  analogWrite(motor_enableA, 90);//90
-  analogWrite(motor_enableB, 100);//100
+  analogWrite(motor_enableA, 190);//90
+  analogWrite(motor_enableB, 200);//100
 
   Serial.println("Forward");
   digitalWrite(motor_lA, HIGH);
@@ -181,7 +181,7 @@ void Stop() {
 
 
 // Function to rotate towards the target direction
-void move_it(int action) {
+void turn_using_magnetometer(int action) {
   //actions: [0, 1, 2] represent ["left", "right", "forward"] respectively
   float target_degrees;
   float heading_degrees;
@@ -247,7 +247,7 @@ void move_it(int action) {
   
     if (deviation > DeviationThreshold) {
       // Adjust the relationship between deviation and duration based on your requirements
-      int duration = map(deviation, 0, 180, 10, 450); // 200,2000
+      int duration = map(deviation, 0, 180, 10, 450); // map(deviation, 0, 180, 200, 2000)
       // delay(1000);
       /*
         deviation: This is the value you want to map, in this case, it's the deviation angle.
@@ -267,10 +267,11 @@ void move_it(int action) {
       }
     }
     else {
+      Stop();
       return;
       // delay(1000);
     }
-  }Stop();
+  }
   return;
 }
 
@@ -327,18 +328,18 @@ void loop() {
 //  float targetDirectionError = 20.0;
 
 //  rotate(initialDirection, headingDegrees, targetDirectionError);
-//move_it(0);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+//turn_using_magnetometer(0);  //actions: [0, 1, 2] are ["left", right, forward respectively]
 //delay(5000);
-//move_it(1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+//turn_using_magnetometer(1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
 //delay(5000);
-move_it(0);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+turn_using_magnetometer(0);  //actions: [0, 1, 2] are ["left", right, forward respectively]
 delay(5000);
-move_it(1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+turn_using_magnetometer(1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
 delay(5000);
-move_it(2);  //actions: [0, 1, 2] are ["left", right, forward respectively]
+turn_using_magnetometer(2);  //actions: [0, 1, 2] are ["left", right, forward respectively]
 delay(5000);
 
-// move_it(2);
+// turn_using_magnetometer(2);
 //// ===========================================================================
 
   
