@@ -5,7 +5,7 @@
 
 
 ## Path Calibration:
-* [Magnetometer-Reference](https://forum.arduino.cc/t/not-reading-a-magnetic-sensor/561257/2)
+* [Magnetometer-Reference](https://forum.arduino.cc/t/not-reading-a-magnetic-sensor/561257/3)
 * Install two libraries: `Adafruit HMC5883 Unified` and `Adafruit Unified Sensor`
 ### ** Working: **
 ```
