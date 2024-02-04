@@ -8,6 +8,14 @@ bool use_magnetometer_for_turning = true; // 0 is off. 1 is on.
 bool magnetometer_continuous_rotation = false;
 float magnetometer_deviation_threshold = 20.0; // angle (degrees) deviation threshold
 
+// Global variables for magnetometer calibration
+float xOffset = 0.0;
+float yOffset = 0.0;
+float zOffset = 0.0;
+float xScale = 1.0;
+float yScale = 1.0;
+float zScale = 1.0;
+
 int left_threshold = 35;
 int right_threshold = 35;
 int front_threshold = 30;
@@ -79,35 +87,77 @@ int findMaxAction(float q_values[], int num_actions) {
 }
 
 
-// Function to get the nearest cardinal direction
-float getNearestDirection(float currentAngle) {
-    // Calculate the angular difference from each cardinal direction
-    float diffNorth = fabs(currentAngle - northAngle);
-    float diffSouth = fabs(currentAngle - southAngle);
-    float diffEast = fabs(currentAngle - eastAngle);
-    float diffWest = fabs(currentAngle - westAngle);
+float getTargetAngle(float currentAngle, int direction) {
+  // returns angle that would be final angle after rotation
 
-    // Find the minimum difference using a ternary operator
-    float minDiff = (diffNorth < diffSouth) ? diffNorth : diffSouth;
-    minDiff = (diffEast < minDiff) ? diffEast : minDiff;
-    minDiff = (diffWest < minDiff) ? diffWest : minDiff;
-
-    // Determine the nearest direction based on the minimum difference
-    if (minDiff == diffNorth) {
-        Serial.print("north it is");
-        return northAngle;
-
-    } else if (minDiff == diffSouth) {
-        Serial.println("south it is");
+  if ((southAngle > currentAngle) || (eastAngle < currentAngle)){
+      // in between south and east
+      if (direction == 0){
+        // Left Turn
         return southAngle;
-    } else if (minDiff == diffEast) {
-        Serial.println("east it is");
+      } else{
+        // Right Turn
         return eastAngle;
-    } else {
-        Serial.println("west it is");
+      }
+    } else if((eastAngle > currentAngle) || (northAngle < currentAngle)){
+      // in between North and West
+      if (direction == 0){
+        // Left Turn
+        return eastAngle;
+      } else{
+        // Right Turn
+        return northAngle;
+      }
+    } else if((northAngle > currentAngle) || (westAngle < currentAngle)){
+      // in between North and West
+      if (direction == 0){
+        // Left Turn
+        return northAngle;
+      } else{
+        // Right Turn
         return westAngle;
+      }
+    } else{
+      // in between South and West
+      if (direction == 0){
+        // Left Turn
+        return westAngle;
+      } else{
+        // Right Turn
+        return southAngle;
+      }
     }
 }
+
+// // Function to get the nearest cardinal direction
+// float getNearestDirection(float currentAngle) {
+//     // Calculate the angular difference from each cardinal direction
+//     float diffNorth = fabs(currentAngle - northAngle);
+//     float diffSouth = fabs(currentAngle - southAngle);
+//     float diffEast = fabs(currentAngle - eastAngle);
+//     float diffWest = fabs(currentAngle - westAngle);
+
+//     // Find the minimum difference using a ternary operator
+//     float minDiff = (diffNorth < diffSouth) ? diffNorth : diffSouth;
+//     minDiff = (diffEast < minDiff) ? diffEast : minDiff;
+//     minDiff = (diffWest < minDiff) ? diffWest : minDiff;
+
+//     // Determine the nearest direction based on the minimum difference
+//     if (minDiff == diffNorth) {
+//         Serial.print("north it is");
+//         return northAngle;
+
+//     } else if (minDiff == diffSouth) {
+//         Serial.println("south it is");
+//         return southAngle;
+//     } else if (minDiff == diffEast) {
+//         Serial.println("east it is");
+//         return eastAngle;
+//     } else {
+//         Serial.println("west it is");
+//         return westAngle;
+//     }
+// }
 
 
 void forward(int delay_parameter = 1000, bool forward_after_turning = false) {
@@ -176,6 +226,9 @@ void Stop() {
 }
 
 
+
+
+
 void displaySensorDetails(void) {
   sensor_t sensor;
   mag.getSensor(&sensor);
@@ -190,44 +243,70 @@ void displaySensorDetails(void) {
   Serial.println("");
   delay(500);
 }
-// Function to get magnetic sensor coordinates
-void getMagneticCoordinates(float &x, float &y, float &z) {
+
+// Function to get calibrated magnetic sensor coordinates
+void getCalibratedMagneticCoordinates(float &x, float &y, float &z) {
   sensors_event_t event;
   mag.getEvent(&event);
   x = event.magnetic.x;
   y = event.magnetic.y;
   z = event.magnetic.z;
+
+  // Apply calibration
+  x = (x - xOffset) * xScale;
+  y = (y - yOffset) * yScale;
+  z = (z - zOffset) * zScale;
 }
+
 // Function to get magnetic sensor heading
 float getMagneticHeading() {
   float x, y, z;
-  getMagneticCoordinates(x, y, z);
-    // Display the results (magnetic vector values are in micro-Tesla (uT))
+  getCalibratedMagneticCoordinates(x, y, z);
+
   Serial.print("X: "); Serial.print(x); Serial.print("  ");
   Serial.print("Y: "); Serial.print(y); Serial.print("  ");
   Serial.print("Z: "); Serial.print(z); Serial.print("  ");
   Serial.println("uT");
+
   float heading = atan2(y, x);
-  // Once you have your heading, you must then add your 'Declination Angle', which is the 'Error' of the magnetic field in your location.
-  // Find yours here: http://www.magnetic-declination.com/
-  // Mine is: -13* 2' W, which is ~13 Degrees, or (which we need) 0.22 radians
-  // If you cannot find your Declination, comment out these two lines, your compass will be slightly off.
-  // float declinationAngle = 0.22;
-  // heading += declinationAngle;
-  // Correct for when signs are reversed.
-  if (heading < 0)
+  float headingDegrees;
+  if (heading < 0){
     heading += 2 * PI;
-  // Check for wrap due to addition of declination.
-  if (heading > 2 * PI)
+    headingDegrees = heading * (180 / PI);
+    Serial.print("0. Heading (degrees): "); Serial.println(headingDegrees);
+  } else if(heading > 2 * PI){
     heading -= 2 * PI;
-  // Convert radians to degrees for readability.
-  float headingDegrees = heading * 180 / PI;
-  Serial.print("Heading : "); Serial.println(headingDegrees);
+    headingDegrees = heading * (180 / PI);
+    Serial.print("1. Heading (degrees): "); Serial.println(headingDegrees);
+  } else {
+    headingDegrees = heading * (180 / PI);
+    Serial.print("2. Heading (degrees): "); Serial.println(headingDegrees);
+  }
+
   return headingDegrees;
 }
 
+void calibrateMagnetometer() {
+  float x, y, z;
 
+  // Collect calibration data (manually input or read from a file)
+  float minX = -25; // replace with your actual values
+  float maxX = 19.7;  // replace with your actual values
+  float minY = -19.55; // replace with your actual values
+  float maxY = 25.36;  // replace with your actual values
+  float minZ = -0.1; // replace with your actual values
+  float maxZ = 28.06;  // replace with your actual values
 
+  // Calculate offsets
+  xOffset = (maxX + minX) / 2.0;
+  yOffset = (maxY + minY) / 2.0;
+  zOffset = (maxZ + minZ) / 2.0;
+
+  // Calculate scale factors
+  xScale = 2.0 / (maxX - minX);
+  yScale = 2.0 / (maxY - minY);
+  zScale = 2.0 / (maxZ - minZ);
+}
 
 // Function to rotate towards the target direction
 void turn_using_magnetometer(int action, bool forward_at_end = false) {
@@ -240,26 +319,27 @@ void turn_using_magnetometer(int action, bool forward_at_end = false) {
   // Serial.println("======================");Serial.println("Moving ");Serial.println(action);Serial.println("======================");
   heading_degrees = getMagneticHeading();
   heading_degrees = fmod(heading_degrees, 360.0);
-  if (action == 0) {
-    target_degrees = getNearestDirection(fabs(heading_degrees-90));
-    /*
-      target_degrees = initialDirection - 90;
-      // it should have worked but the dirfference deviates from 90Degrees (East, West, North, South)
-    */
-    // Serial.println("======================");Serial.println("mag. Left");Serial.println("======================");
-  } else if (action == 1) {
-    target_degrees = getNearestDirection(fabs(heading_degrees+90));
-    /*
-      target_degrees = initialDirection + 90;
-      // it should have worked but the dirfference deviates from 90Degrees (East, West, North, South)
-    */
+  target_degrees = getNearestDirection(heading_degrees, action);
+  // if (action == 0) {
+  //   target_degrees = getNearestDirection(fabs(heading_degrees-90), action);
+  //   /*
+  //     target_degrees = initialDirection - 90;
+  //     // it should have worked but the dirfference deviates from 90Degrees (East, West, North, South)
+  //   */
+  //   // Serial.println("======================");Serial.println("mag. Left");Serial.println("======================");
+  // } else if (action == 1) {
+  //   target_degrees = getNearestDirection(fabs(heading_degrees+90));
+  //   /*
+  //     target_degrees = initialDirection + 90;
+  //     // it should have worked but the dirfference deviates from 90Degrees (East, West, North, South)
+  //   */
     
-    // Serial.println("======================");Serial.println("mag. Right");Serial.println();Serial.println("======================");
-  } else if (action == 2) {
-    Serial.println("======================");Serial.println("mag. Forward");Serial.println("======================");
-    forward();  // move forward
-    return;
-  }
+  //   // Serial.println("======================");Serial.println("mag. Right");Serial.println();Serial.println("======================");
+  // } else if (action == 2) {
+  //   Serial.println("======================");Serial.println("mag. Forward");Serial.println("======================");
+  //   forward();  // move forward
+  //   return;
+  // }
   deviation_left = fmod(fmod(heading_degrees - target_degrees, 360.0)+360, 360);  // deviation from 
   deviation_right = fmod(fmod(target_degrees - heading_degrees, 360.0)+360, 360);
   deviation = min(deviation_left, deviation_right);
@@ -294,7 +374,7 @@ void turn_using_magnetometer(int action, bool forward_at_end = false) {
 
     if (deviation > magnetometer_deviation_threshold) {
       // Adjust the relationship between deviation and duration based on your requirements
-      int duration = map(deviation, 0, 180, 5, 400); // map(deviation, 0, 180, 200, 2000)
+      int duration = map(deviation, 0, 180, 10, 300); // map(deviation, 0, 180, 200, 2000)
       /* -------
           map:
          -------
@@ -348,6 +428,10 @@ void setup() {
 
   pinMode(trigger_right,OUTPUT);
   pinMode(echo_right,INPUT);
+  
+  //Controlling speed (0   = off and 255 = max speed):
+  analogWrite(motor_enable_left, 210);  // 90
+  analogWrite(motor_enable_right, 200);  // 100
 
   // Unflatten the Q-table in Arduino
   int index = 0;
@@ -369,6 +453,7 @@ void setup() {
   }
   /* Display some basic information on this sensor */
   displaySensorDetails();
+  calibrateMagnetometer();  // Calibrate the magnetometer
  // ==========================================
 
   Serial.begin(9600);  // Initialize serial communication
@@ -380,11 +465,6 @@ void loop() {
   int path_right;    // 0 indicate there is path towards right (>=10cm right from current position) || 1 indicate there is obstacle
   int path_left;     // 0 indicate there is path towards left (>=10cm left from current position)
   int path_front;  // 0 indicate there is path towards front (>=35cm forward from current position)
-
-  //Controlling speed (0   = off and 255 = max speed):     
-  //(Optional)
-  analogWrite(motor_enable_left, 210);  // 90
-  analogWrite(motor_enable_right, 200);  // 100
 
 //  //Calculating distance
 //  digitalWrite(trigger_front, LOW);
