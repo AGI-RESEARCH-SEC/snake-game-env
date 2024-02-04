@@ -38,12 +38,6 @@ void displaySensorDetails(void) {
 
 // Function to get the nearest cardinal direction
 float getNearestDirection(float currentAngle) {
-    // Pre-stored angles for cardinal directions
-    float northAngle = 0.0f;
-    float southAngle = 180.0f;
-    float eastAngle = 90.0f;
-    float westAngle = 270.0f;
-
     // Calculate the angular difference from each cardinal direction
     float diffNorth = fabs(currentAngle - northAngle);
     float diffSouth = fabs(currentAngle - southAngle);

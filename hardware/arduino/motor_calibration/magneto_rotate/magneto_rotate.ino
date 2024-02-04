@@ -252,8 +252,9 @@ float rightAngle = 22;
 // float westAngle = 111;
 // float southAngle = 256;
 // float eastAngle = 216;
+float DeviationThreshold = 10.0;
 
-// Global variables for magnetometer calibration
+// Global variables for calibration
 float xOffset = 0.0;
 float yOffset = 0.0;
 float zOffset = 0.0;

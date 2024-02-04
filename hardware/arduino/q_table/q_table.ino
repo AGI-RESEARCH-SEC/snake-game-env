@@ -6,7 +6,7 @@ const int numMeasurements = 3; // 5 // Number of ultrasonic sensor measurements 
 int continuous_actions = 1; // 0 Represent Delay after each action; 1 Represent Discrete actions
 bool use_magnetometer_for_turning = true; // 0 is off. 1 is on. 
 bool magnetometer_continuous_rotation = false;
-float magnetometer_deviation_threshold = 20.0; // angle (degrees) deviation threshold
+float magnetometer_deviation_threshold = 12.0; // angle (degrees) deviation threshold
 
 // Global variables for magnetometer calibration
 float xOffset = 0.0;
@@ -21,10 +21,10 @@ int right_threshold = 35;
 int front_threshold = 30;
 
 // angles for cardinal directions
-float northAngle = 168; // 0;
-float westAngle = 118;  // 111;
-float southAngle =  61; // 256
-float eastAngle = 0;    // 216
+float northAngle = 160; //  178;
+float westAngle = 87;   // 90;
+float southAngle = 330;     // 13;
+float eastAngle = 212;  // 310;
 /* 
   // float initialDirection = 70;// 100.0; // angle (degrees) the bot is facing initially.
   // float initialDirection = 210;// college // angle (degrees) the bot is facing initially.
@@ -67,12 +67,36 @@ const int num_actions = 3;
 // Create a 2D array to represent the Q-table
 float q_table[num_states][num_actions];
 
+
+void calibrateMagnetometer() {
+  float x, y, z;
+  // Collect calibration data (manually input or read from a file)
+  float minX = -25; // replace with your actual values
+  float maxX = 19.7;  // replace with your actual values
+  float minY = -19.55; // replace with your actual values
+  float maxY = 25.36;  // replace with your actual values
+  float minZ = -0.1; // replace with your actual values
+  float maxZ = 28.06;  // replace with your actual values
+
+  // Calculate offsets
+  xOffset = (maxX + minX) / 2.0;
+  yOffset = (maxY + minY) / 2.0;
+  zOffset = (maxZ + minZ) / 2.0;
+
+  // Calculate scale factors
+  xScale = 2.0 / (maxX - minX);
+  yScale = 2.0 / (maxY - minY);
+  zScale = 2.0 / (maxZ - minZ);
+}
+
+
 // Binary to decimal
 int binaryToDecimal(int input1, int input2, int input3) {
   // Convert binary to decimal
   int decimalValue = input1 * 4 + input2 * 2 + input3;
   return decimalValue;
 }
+
 
 // Gives Action with maximum q value
 int findMaxAction(float q_values[], int num_actions) {
@@ -90,7 +114,7 @@ int findMaxAction(float q_values[], int num_actions) {
 float getTargetAngle(float currentAngle, int direction) {
   // returns angle that would be final angle after rotation
 
-  if ((southAngle > currentAngle) || (eastAngle < currentAngle)){
+  if ((southAngle >= currentAngle) && (eastAngle <= currentAngle)){
       // in between south and east
       if (direction == 0){
         // Left Turn
@@ -99,7 +123,7 @@ float getTargetAngle(float currentAngle, int direction) {
         // Right Turn
         return eastAngle;
       }
-    } else if((eastAngle > currentAngle) || (northAngle < currentAngle)){
+    } else if((eastAngle >= currentAngle) && (northAngle <= currentAngle)){
       // in between North and West
       if (direction == 0){
         // Left Turn
@@ -108,7 +132,7 @@ float getTargetAngle(float currentAngle, int direction) {
         // Right Turn
         return northAngle;
       }
-    } else if((northAngle > currentAngle) || (westAngle < currentAngle)){
+    } else if((northAngle >= currentAngle) && (westAngle <= currentAngle)){
       // in between North and West
       if (direction == 0){
         // Left Turn
@@ -286,28 +310,6 @@ float getMagneticHeading() {
   return headingDegrees;
 }
 
-void calibrateMagnetometer() {
-  float x, y, z;
-
-  // Collect calibration data (manually input or read from a file)
-  float minX = -25; // replace with your actual values
-  float maxX = 19.7;  // replace with your actual values
-  float minY = -19.55; // replace with your actual values
-  float maxY = 25.36;  // replace with your actual values
-  float minZ = -0.1; // replace with your actual values
-  float maxZ = 28.06;  // replace with your actual values
-
-  // Calculate offsets
-  xOffset = (maxX + minX) / 2.0;
-  yOffset = (maxY + minY) / 2.0;
-  zOffset = (maxZ + minZ) / 2.0;
-
-  // Calculate scale factors
-  xScale = 2.0 / (maxX - minX);
-  yScale = 2.0 / (maxY - minY);
-  zScale = 2.0 / (maxZ - minZ);
-}
-
 // Function to rotate towards the target direction
 void turn_using_magnetometer(int action, bool forward_at_end = false) {
   //actions: [0, 1, 2] represent ["left", "right", "forward"] respectively
@@ -319,7 +321,7 @@ void turn_using_magnetometer(int action, bool forward_at_end = false) {
   // Serial.println("======================");Serial.println("Moving ");Serial.println(action);Serial.println("======================");
   heading_degrees = getMagneticHeading();
   heading_degrees = fmod(heading_degrees, 360.0);
-  target_degrees = getNearestDirection(heading_degrees, action);
+  target_degrees = getTargetAngle(heading_degrees, action);
   // if (action == 0) {
   //   target_degrees = getNearestDirection(fabs(heading_degrees-90), action);
   //   /*
@@ -350,7 +352,7 @@ void turn_using_magnetometer(int action, bool forward_at_end = false) {
     heading_degrees = getMagneticHeading();
 
     // Check if the car is not facing towards the target direction
-    heading_degrees = fmod(heading_degrees, 360.0);
+    // heading_degrees = fmod(heading_degrees, 360.0);
     //  float deviation_left = fmod(abs(heading_degrees - target_degrees), 360.0);
     //  float deviation_right = fmod(abs(target_degrees - heading_degrees), 360.0);
     /*
@@ -374,7 +376,7 @@ void turn_using_magnetometer(int action, bool forward_at_end = false) {
 
     if (deviation > magnetometer_deviation_threshold) {
       // Adjust the relationship between deviation and duration based on your requirements
-      int duration = map(deviation, 0, 180, 10, 300); // map(deviation, 0, 180, 200, 2000)
+      int duration = map(deviation, 0, 180, 15, 500); // map(deviation, 0, 180, 200, 2000)
       /* -------
           map:
          -------
@@ -430,8 +432,8 @@ void setup() {
   pinMode(echo_right,INPUT);
   
   //Controlling speed (0   = off and 255 = max speed):
-  analogWrite(motor_enable_left, 210);  // 90
-  analogWrite(motor_enable_right, 200);  // 100
+  analogWrite(motor_enable_left, 200);  // 90
+  analogWrite(motor_enable_right, 225);  // 100
 
   // Unflatten the Q-table in Arduino
   int index = 0;
@@ -460,6 +462,8 @@ void setup() {
 }
 
 void loop() {
+//  forward(1000, 1);return;
+  
   long duration_front, distance_front, duration_left, distance_left, duration_right, distance_right;
 
   int path_right;    // 0 indicate there is path towards right (>=10cm right from current position) || 1 indicate there is obstacle
