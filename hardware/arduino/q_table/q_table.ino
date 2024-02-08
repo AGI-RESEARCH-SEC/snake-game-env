@@ -4,9 +4,9 @@
 
 const int numMeasurements = 3; // 5 // Number of ultrasonic sensor measurements to average
 int continuous_actions = 1; // 0 Represent Delay after each action; 1 Represent Discrete actions
-bool use_magnetometer_for_turning = true; // 0 is off. 1 is on. 
+bool use_magnetometer_for_turning = false; // 0 is off. 1 is on. 
 bool magnetometer_continuous_rotation = false;
-float magnetometer_deviation_threshold = 12.0; // angle (degrees) deviation threshold
+float magnetometer_deviation_threshold = 10.0; // angle (degrees) deviation threshold
 
 // Global variables for magnetometer calibration
 float xOffset = 0.0;
@@ -16,15 +16,15 @@ float xScale = 1.0;
 float yScale = 1.0;
 float zScale = 1.0;
 
-int left_threshold = 35;
-int right_threshold = 35;
+int left_threshold = 40;
+int right_threshold = 40;
 int front_threshold = 30;
 
 // angles for cardinal directions
-float northAngle = 160; //  178;
-float westAngle = 87;   // 90;
-float southAngle = 330;     // 13;
-float eastAngle = 212;  // 310;
+float northAngle = 150;// 165;// 160;//-> IT 102// It 503 160; //  178; // Desktop
+float westAngle = 80;// 100;//87;   // 90;
+float southAngle = 70;//330;     // 13;
+float eastAngle = 250;// 212;  // 310;
 /* 
   // float initialDirection = 70;// 100.0; // angle (degrees) the bot is facing initially.
   // float initialDirection = 210;// college // angle (degrees) the bot is facing initially.
@@ -51,7 +51,9 @@ int echo_right = A3;
 
 int trigger_front = 12; //A4;
 int echo_front = 13;    //A5;
-
+// int left_threshold = 35;
+// int right_threshold = 35;
+// int front_threshold = 30;
 // Define the flattened Q-table copied from Python
 //float flattened_q_table[] = {-0.14567542786524684, 0.028992119894766844, -0.2658059392757915, 15.500593710459835, -0.15679, -0.5751383360655641, -0.5, -0.7610600150158306, 19.256544264254092, 16.330889837828664, -2.594840781380889, -2.474224227054556, -0.852180077055561, -0.7006457235470309, 12.950534339413846, -2.2842125693118476, -2.776785077874974, -2.6859971955040907, -1.6150456834794744, -1.8485000844551536, 12.096579828480882, -2.7116605133971876, -3.133167873327339, -3.182911142097555};
 
@@ -67,16 +69,15 @@ const int num_actions = 3;
 // Create a 2D array to represent the Q-table
 float q_table[num_states][num_actions];
 
-
 void calibrateMagnetometer() {
   float x, y, z;
   // Collect calibration data (manually input or read from a file)
-  float minX = -25; // replace with your actual values
-  float maxX = 19.7;  // replace with your actual values
-  float minY = -19.55; // replace with your actual values
-  float maxY = 25.36;  // replace with your actual values
-  float minZ = -0.1; // replace with your actual values
-  float maxZ = 28.06;  // replace with your actual values
+  float minX = -48;// -25; // replace with your actual values
+  float maxX = 29;//19.7;  // replace with your actual values
+  float minY = -31.45;//-19.55; // replace with your actual values
+  float maxY = 42;//25.36;  // replace with your actual values
+  float minZ = 32;// -0.1; // replace with your actual values
+  float maxZ = 40.55;// 28.06;  // replace with your actual values
 
   // Calculate offsets
   xOffset = (maxX + minX) / 2.0;
@@ -183,14 +184,66 @@ float getTargetAngle(float currentAngle, int direction) {
 //     }
 // }
 
+void forward_new(int delay_parameter = 1500, bool forward_after_turning = false) {
+    // Controlling speed (0 = off and 255 = max speed):
+    int base_speed_left = 160;  // Base speed for left motor
+    int base_speed_right = 220; // Base speed for right motor
 
-void forward(int delay_parameter = 1000, bool forward_after_turning = false) {
+    // Calibration factors for different paths
+    float calibration_factor_left = 5.0;  // Adjust as needed
+    float calibration_factor_right = 1.0; // Adjust as needed
+
+    // Measuring distances
+    float distance_left = measurePreciseDistance(trigger_left, echo_left);
+    float distance_right = measurePreciseDistance(trigger_right, echo_right);
+
+    // Adjusting motor speeds based on distance differences
+    int speed_left = base_speed_left;
+    int speed_right = base_speed_right;
+
+    // Calculate the difference between left and right distances
+    float distance_difference = distance_left - distance_right;
+
+    // Apply calibration factors
+    float adjusted_difference = distance_difference * calibration_factor_left;
+
+    // Adjust motor speeds based on the difference
+    speed_left -= adjusted_difference;
+    speed_right += adjusted_difference;
+
+    // Cap motor speeds between 0 and 255
+    speed_left = constrain(speed_left, 0, 255);
+    speed_right = constrain(speed_right, 0, 255);
+
+    // Setting motor speeds
+    analogWrite(motor_enable_left, speed_left);
+    analogWrite(motor_enable_right, speed_right);
+
+    Serial.println("Forward");
+    digitalWrite(motor_lA, HIGH);
+    digitalWrite(motor_lB, LOW);
+    digitalWrite(motor_rA, LOW);
+    digitalWrite(motor_rB, HIGH);
+
+    if ((continuous_actions == 0) || (forward_after_turning == 1)) {
+        // Discrete actions
+        delay(delay_parameter);
+        Stop();
+    }
+    return;
+}
+
+
+void forward(int delay_parameter = 1500, bool forward_after_turning = false) {
+    //Controlling speed (0   = off and 255 = max speed):
+  analogWrite(motor_enable_left, 160);  // 90
+  analogWrite(motor_enable_right, 220);  // 100
+
   Serial.println("Forward");
   digitalWrite(motor_lA, HIGH);
   digitalWrite(motor_lB, LOW);
   digitalWrite(motor_rA, LOW);
   digitalWrite(motor_rB, HIGH);
-
   if ((continuous_actions == 0) || (forward_after_turning == 1)){
     // Discrete actions
     delay(delay_parameter);
@@ -199,22 +252,31 @@ void forward(int delay_parameter = 1000, bool forward_after_turning = false) {
   return;
 }
 
-void right(int delay_parameter = 1020, bool move_forward=1) {// 1200
+void right(int delay_parameter = 630, bool move_forward=1) {// 1200
+  analogWrite(motor_enable_left, 160);  // 90
+  analogWrite(motor_enable_right, 160);  // 100
+
   Serial.println("Right");
   digitalWrite(motor_lA, HIGH);
   digitalWrite(motor_lB, LOW);
   digitalWrite(motor_rA, HIGH);
   digitalWrite(motor_rB, LOW);
-  if (magnetometer_continuous_rotation != 1){
+  if (magnetometer_continuous_rotation != true){
+    Serial.print("DElay");
     delay(delay_parameter);
     Stop();
+    Serial.print("Over");
   }
   if (move_forward == 1){
     forward();
+    return;
   }
 }
 
-void left(int delay_parameter = 1000, bool move_forward=1) {// 1250
+void left(int delay_parameter = 745, bool move_forward=1) {// 1250
+  analogWrite(motor_enable_left, 160);  // 90
+  analogWrite(motor_enable_right, 160);  // 100
+  
   Serial.println("Left");
   Serial.println(delay_parameter);
   digitalWrite(motor_lA, LOW);
@@ -227,6 +289,7 @@ void left(int delay_parameter = 1000, bool move_forward=1) {// 1250
   }
   if (move_forward == 1){
     forward();
+    return;
   }
 }
 
@@ -344,10 +407,11 @@ void turn_using_magnetometer(int action, bool forward_at_end = false) {
   // }
   deviation_left = fmod(fmod(heading_degrees - target_degrees, 360.0)+360, 360);  // deviation from 
   deviation_right = fmod(fmod(target_degrees - heading_degrees, 360.0)+360, 360);
-  deviation = min(deviation_left, deviation_right);
+  deviation = min(abs(deviation_left), abs(deviation_right));
   //  float targetDirection = 97.0;  // Assuming the target direction is 90 degrees (east)
   //  float targetDirectionError = 20.0;
   while (deviation > magnetometer_deviation_threshold) {
+    // delay(500);
     // Get magnetic heading angle in degrees
     heading_degrees = getMagneticHeading();
 
@@ -376,7 +440,7 @@ void turn_using_magnetometer(int action, bool forward_at_end = false) {
 
     if (deviation > magnetometer_deviation_threshold) {
       // Adjust the relationship between deviation and duration based on your requirements
-      int duration = map(deviation, 0, 180, 15, 500); // map(deviation, 0, 180, 200, 2000)
+      int duration = map(deviation, 0, 180, 10, 300); // map(deviation, 0, 180, 200, 2000)
       /* -------
           map:
          -------
@@ -389,11 +453,11 @@ void turn_using_magnetometer(int action, bool forward_at_end = false) {
       if (deviation_left < deviation_right) {
         // If deviation is positive, move left
         Serial.println("======================");Serial.print("mag. Right. ");Serial.print(heading_degrees);Serial.print(" -----> ");Serial.println(target_degrees);Serial.println(duration);Serial.println("======================");
-        right(duration, 0);
+        right(duration, 1);
       } else {
         // If deviation is negative, move right
         Serial.println("======================");Serial.print("mag. Left. ");Serial.print(heading_degrees);Serial.print(" -----> ");Serial.println(target_degrees);Serial.println(duration);Serial.println("======================");
-        left(duration, 0);
+        left(duration, 1);
       }
     } else {
       // deviation is less than magnetometer_deviation_threshold.
@@ -462,8 +526,14 @@ void setup() {
 }
 
 void loop() {
-//  forward(1000, 1);return;
   
+  // turn_using_magnetometer(1, true);
+  // right();return;
+//  right();return;
+ //Controlling speed (0   = off and 255 = max speed):
+  analogWrite(motor_enable_left, 200);  // 90
+  analogWrite(motor_enable_right, 225);  // 100
+  // forward(); return;
   long duration_front, distance_front, duration_left, distance_left, duration_right, distance_right;
 
   int path_right;    // 0 indicate there is path towards right (>=10cm right from current position) || 1 indicate there is obstacle
@@ -479,24 +549,26 @@ void loop() {
 //  duration_front = pulseIn(echo_front, HIGH);
 //  distance_front= duration_front*0.034/2;
 distance_left = measurePreciseDistance(trigger_left, echo_left);
-distance_front = measurePreciseDistance(trigger_right, echo_right);
+distance_right = measurePreciseDistance(trigger_right, echo_right);
 distance_front = measurePreciseDistance(trigger_front, echo_front);
 
-  digitalWrite(trigger_left, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigger_left, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigger_left, LOW);
-  duration_left = pulseIn(echo_left, HIGH);
-  distance_left= duration_left*0.034/2;
+  // digitalWrite(trigger_left, LOW);
+  // delayMicroseconds(2);
+  // digitalWrite(trigger_left, HIGH);
+  // delayMicroseconds(10);
+  // digitalWrite(trigger_left, LOW);
+  // duration_left = pulseIn(echo_left, HIGH);
+  // distance_left= duration_left*0.034/2;
+  // Serial.print(" lef.");Serial.print(distance_left);Serial.print(" ");
+  Serial.print("Dist.");Serial.print(distance_left);Serial.print(" ");Serial.print(distance_right);Serial.print(" ");Serial.println(distance_front);//return;
 
-  digitalWrite(trigger_right, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigger_right, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigger_right, LOW);
-  duration_right = pulseIn(echo_right, HIGH);
-  distance_right= duration_right*0.034/2;
+  // digitalWrite(trigger_right, LOW);
+  // delayMicroseconds(2);
+  // digitalWrite(trigger_right, HIGH);
+  // delayMicroseconds(10);
+  // digitalWrite(trigger_right, LOW);
+  // duration_right = pulseIn(echo_right, HIGH);
+  // distance_right= duration_right*0.034/2;
 
   if (distance_left >= left_threshold) {//10
     path_left = 0;
@@ -515,14 +587,23 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
   } else {
     path_front = 1;
   }
+
+  if (path_front == 0){
+    forward_new();return;
+  }
   // ==================================
   // Check if goal is reached
   // ==================================
+  
   if ((path_left==1) && (path_right==1) && (path_front==1)){
     Serial.print("============================");Serial.print("============= Reached Goal ========");Serial.println("============================");
+    Serial.print(distance_left);Serial.print(distance_right);Serial.println(distance_front);
     Stop();
     delay(180000);  // Goal reached :: Sleep For 30 minutes
 
+  } else{
+    Serial.print("============================");Serial.print("============= Not Reached Goal ========");
+    Serial.print(distance_left);Serial.print(distance_right);Serial.println(distance_front);
   }
   float heading_degrees = getMagneticHeading();
   Serial.println("Heading: ");Serial.print(heading_degrees);
@@ -601,19 +682,21 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
   switch (maxAction) {
     case 0:
       Serial.print("---------------------");Serial.print("Decision: Left");Serial.println("---------------------");
-      if (use_magnetometer_for_turning == 1){
+      if (use_magnetometer_for_turning == true){
         turn_using_magnetometer(0, 1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
       } else {
                 left();
+                return;
         //      turnLeft();
         }
       break;
     case 1:
       Serial.print("---------------------");Serial.print("Decision: Right.");Serial.println("---------------------");
-      if (use_magnetometer_for_turning == 1){
+      if (use_magnetometer_for_turning == true){
           turn_using_magnetometer(1, 1);  //actions: [0, 1, 2] are ["left", right, forward respectively]
       } else {
          right();
+         return;
         // Perform action for the second action
         // Example: turnRight();
       }
@@ -622,6 +705,7 @@ distance_front = measurePreciseDistance(trigger_front, echo_front);
       Serial.print("---------------------");Serial.print("Decision: Forward.");Serial.println("---------------------");
       // move_using_compass_caliberation(2); // Forward
       forward();
+      return;
       // Perform action for the third action
       // Example: moveForward();
       break;
