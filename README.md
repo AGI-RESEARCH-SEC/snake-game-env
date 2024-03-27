@@ -1,3 +1,5 @@
+## Project_Report.pdf: [here](https://github.com/AGI-RESEARCH-SEC/snake-game-env/blob/main/Report_Major_Project.pdf)
+
 ## * **note: old code (utilizing path finding algorithms in snake-game-environment) is in branch: ["old-code"](https://github.com/AGI-RESEARCH-SEC/snake-game-env/tree/old-code)**
 
 <br>
@@ -9,7 +11,7 @@
 # Approach-1: Using Raspberry pi
 * incomplete-code indide `deep_learning/`:
     * `model_training_fixed_destination.ipynb`, `model_training_random_destination.ipynb`, `model_training.ipynb`, `generate_data.ipynb`
-* The above code contains data and models for "Decision tree classifier" and "logistic regression". They use `[vectorized_coordinates, distance_between_source_and_destination]` as state and `['left', 'right', 'forward', 'backward']` as action.
+* The above code contains data and models for "Decision tree classifier" and "logistic regression". They use `[vectorized_coordinates, distance_between_source_and_destination]` as state and `['left', 'right', 'forward', 'backward']` as acton.
 * We originally intended to use DQN that uses `[camera_data, vectorized_coordinates, distance_between_source_and_destination]` as state and `['left', 'right', 'forward', 'backward']` as action.
 * This would be the GPS precision circles around our college:
 *    ![precision_circles_of_around_college](images/precision_circles_of_around_college.webp)
