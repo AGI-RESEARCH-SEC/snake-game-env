@@ -1,4 +1,4 @@
-## Project_Report.pdf: [here](https://github.com/AGI-RESEARCH-SEC/snake-game-env/blob/main/Report_Major_Project.pdf)
+* ## Project_Report.pdf: [here](https://github.com/AGI-RESEARCH-SEC/snake-game-env/blob/main/Report_Major_Project.pdf)
 
 ## * **note: old code (utilizing path finding algorithms in snake-game-environment) is in branch: ["old-code"](https://github.com/AGI-RESEARCH-SEC/snake-game-env/tree/old-code)**
 
